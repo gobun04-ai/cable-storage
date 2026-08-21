@@ -70,6 +70,15 @@
   background: var(--border);
 }
 
+/* ---- danger: 되돌릴 수 없는 동작에만 쓴다 ---- */
+.danger {
+  background: var(--danger);
+  color: var(--text-on-danger);
+}
+.danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+}
+
 /* ---- 크기 ---- */
 .sizeSm {
   min-height: 36px;

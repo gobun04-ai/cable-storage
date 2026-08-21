@@ -208,6 +208,19 @@ export async function deleteProject(id: string): Promise<void> {
   }
 }
 
+/** 저장된 공사를 모두 지운다. 되돌릴 수 없다. */
+export async function clearAllProjects(): Promise<void> {
+  try {
+    const db = await getDb()
+    const tx = db.transaction(['projects', 'bodies'], 'readwrite')
+    await Promise.all([tx.objectStore('projects').clear(), tx.objectStore('bodies').clear(), tx.done])
+    log.warn('all_projects_cleared')
+  } catch (cause) {
+    if (cause instanceof StorageError) throw cause
+    throw toStorageError('clearAllProjects', cause)
+  }
+}
+
 export async function loadSettings(): Promise<AppSettings> {
   try {
     const db = await getDb()

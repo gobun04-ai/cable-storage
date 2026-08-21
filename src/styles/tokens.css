@@ -68,6 +68,7 @@
   --danger: #c0271f; /* 흰 배경 대비 5.6:1 */
   --danger-hover: #a11f18;
   --danger-soft: #fdecea;
+  --text-on-danger: #ffffff;
 
   --success: #1b7a3e;
   --success-soft: #e7f5ec;
@@ -108,6 +109,8 @@
     --danger: #ff8a80;
     --danger-hover: #ffa39b;
     --danger-soft: #3a1f1c;
+    /* 밝은 산호색 위에 흰 글씨를 얹으면 대비가 2.3:1 밖에 안 되므로 어두운 글자를 쓴다 */
+    --text-on-danger: #2a1210;
 
     --success: #6fd694;
     --success-soft: #16301f;
@@ -144,6 +147,7 @@
   --danger: #ff8a80;
   --danger-hover: #ffa39b;
   --danger-soft: #3a1f1c;
+  --text-on-danger: #2a1210;
 
   --success: #6fd694;
   --success-soft: #16301f;

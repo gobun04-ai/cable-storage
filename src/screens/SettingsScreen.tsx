@@ -9,6 +9,7 @@ import { exportBackup, parseBackup, restoreProjects } from '../lib/backup'
 import { requestPersistentStorage, StorageError, type ThemePreference } from '../lib/db'
 import { formatDateTime } from '../lib/format'
 import { log } from '../lib/logger'
+import { countErasable, eraseAllData } from '../lib/reset'
 import { useInstallPrompt } from '../state/useInstallPrompt'
 import { useSettings } from '../state/SettingsProvider'
 import { useToast } from '../state/ToastProvider'
@@ -41,7 +42,7 @@ function messageOf(error: unknown, fallback: string): string {
 export function SettingsScreen() {
   const navigate = useNavigate()
   const toast = useToast()
-  const { settings, setTheme, markBackedUp } = useSettings()
+  const { settings, setTheme, markBackedUp, clearBackupMark } = useSettings()
   const { canInstall, installed, install } = useInstallPrompt()
 
   const [storage, setStorage] = useState<StorageInfo>({ usageBytes: null, quotaBytes: null, persisted: false })
@@ -49,6 +50,8 @@ export function SettingsScreen() {
   const [restoring, setRestoring] = useState(false)
   const [pendingRestore, setPendingRestore] = useState<{ projects: Project[]; skipped: number } | null>(null)
   const [installing, setInstalling] = useState(false)
+  const [erasing, setErasing] = useState(false)
+  const [pendingErase, setPendingErase] = useState<{ projects: number } | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -138,6 +141,37 @@ export function SettingsScreen() {
       }
     } finally {
       setInstalling(false)
+    }
+  }
+
+  /** 지우기 전에 몇 건이 사라지는지 세어 확인 창에 보여 준다. */
+  async function handleEraseRequest(): Promise<void> {
+    if (erasing) return
+    setErasing(true)
+    try {
+      setPendingErase({ projects: await countErasable() })
+    } catch (error) {
+      log.error('erase_count_failed', {}, error)
+      toast.show({ message: messageOf(error, '저장된 공사를 확인하지 못했습니다.'), tone: 'error' })
+    } finally {
+      setErasing(false)
+    }
+  }
+
+  async function handleConfirmErase(): Promise<void> {
+    if (erasing) return
+    setErasing(true)
+    try {
+      const summary = await eraseAllData()
+      clearBackupMark()
+      setPendingErase(null)
+      toast.show({ message: `공사 ${summary.projects}건을 지웠습니다.`, tone: 'success' })
+      navigate('/')
+    } catch (error) {
+      log.error('erase_failed', {}, error)
+      toast.show({ message: messageOf(error, '삭제하지 못했습니다.'), tone: 'error' })
+    } finally {
+      setErasing(false)
     }
   }
 
@@ -266,6 +300,21 @@ export function SettingsScreen() {
             </div>
           </section>
 
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>기록 지우기</h2>
+            <div className={styles.dangerZone}>
+              <p className={styles.dangerText}>
+                이 기기에 저장된 공사와 이전에 쓴 값 제안을 모두 지웁니다. 테마 설정과 다른 사이트의 자료는
+                건드리지 않습니다.
+                <br />
+                <strong>되돌릴 수 없습니다.</strong>
+              </p>
+              <Button variant="danger" loading={erasing} onClick={() => void handleEraseRequest()}>
+                모든 데이터 삭제
+              </Button>
+            </div>
+          </section>
+
           <p className={styles.appInfo}>
             케이블노트 v{__APP_VERSION__}
             <br />
@@ -289,6 +338,24 @@ export function SettingsScreen() {
         busy={restoring}
         onConfirm={() => void handleConfirmRestore()}
         onCancel={() => setPendingRestore(null)}
+      />
+
+      <ConfirmDialog
+        open={pendingErase !== null}
+        title="모든 데이터 삭제"
+        tone="danger"
+        description={
+          pendingErase === null
+            ? ''
+            : `공사 ${pendingErase.projects}건과 이전에 쓴 값 제안이 모두 지워집니다.\n` +
+              (settings.lastBackupAt === null
+                ? '\n※ 아직 백업 파일을 받은 적이 없습니다. 지우면 되살릴 방법이 없습니다.\n먼저 백업을 받아 두시는 것을 권합니다.'
+                : `\n마지막 백업: ${formatDateTime(settings.lastBackupAt)}\n그 뒤에 적은 내용은 백업에 들어 있지 않습니다.`)
+        }
+        confirmLabel="지우기"
+        busy={erasing}
+        onConfirm={() => void handleConfirmErase()}
+        onCancel={() => setPendingErase(null)}
       />
     </>
   )

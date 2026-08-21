@@ -6,6 +6,8 @@ interface SettingsContextValue {
   settings: AppSettings
   setTheme: (theme: ThemePreference) => void
   markBackedUp: (at: number) => void
+  /** 데이터를 모두 지웠을 때. 남은 백업 기록이 오해를 부르지 않게 함께 비운다. */
+  clearBackupMark: () => void
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
@@ -51,8 +53,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   )
 
   const markBackedUp = useCallback((at: number) => update({ lastBackupAt: at }), [update])
+  const clearBackupMark = useCallback(() => update({ lastBackupAt: null }), [update])
 
-  const value = useMemo(() => ({ settings, setTheme, markBackedUp }), [settings, setTheme, markBackedUp])
+  const value = useMemo(
+    () => ({ settings, setTheme, markBackedUp, clearBackupMark }),
+    [settings, setTheme, markBackedUp, clearBackupMark],
+  )
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
 }

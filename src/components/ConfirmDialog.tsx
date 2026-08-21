@@ -9,6 +9,8 @@ interface ConfirmDialogProps {
   description: string
   confirmLabel: string
   cancelLabel?: string
+  /** 되돌릴 수 없는 동작이면 'danger' 로 확인 버튼을 붉게 한다 */
+  tone?: 'default' | 'danger'
   busy?: boolean
   onConfirm: () => void
   onCancel: () => void
@@ -24,6 +26,7 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   cancelLabel = '취소',
+  tone = 'default',
   busy = false,
   onConfirm,
   onCancel,
@@ -38,7 +41,7 @@ export function ConfirmDialog({
           <Button variant="ghost" onClick={onCancel} disabled={busy}>
             {cancelLabel}
           </Button>
-          <Button variant="primary" loading={busy} onClick={onConfirm}>
+          <Button variant={tone === 'danger' ? 'danger' : 'primary'} loading={busy} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </>

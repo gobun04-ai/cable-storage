@@ -80,6 +80,23 @@
   display: none;
 }
 
+/* 되돌릴 수 없는 동작은 다른 설정과 섞이지 않도록 떼어 놓는다 */
+.dangerZone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: var(--r-md);
+}
+
+.dangerText {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--text);
+}
+
 .appInfo {
   padding-top: var(--sp-2);
   font-size: var(--fs-xs);
