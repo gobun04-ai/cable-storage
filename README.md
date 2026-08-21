@@ -78,14 +78,25 @@ src/
 
 ## 배포
 
-정적 파일만 만들어지므로 아무 정적 호스팅에나 올릴 수 있다. GitHub Pages 기준:
+`main` 브랜치에 push 하면 GitHub Actions 가 타입 검사 → 테스트 → 빌드 → 배포를 자동으로 한다.
+설정은 [.github/workflows/deploy.yml](.github/workflows/deploy.yml) 에 있다.
+
+- 저장소: https://github.com/gobun04-ai/cable-storage
+- 주소: https://gobun04-ai.github.io/cable-storage/
+
+처음 한 번은 저장소의 **Settings → Pages → Source** 를 `GitHub Actions` 로 지정해야 한다.
+
+하위 경로(`/cable-storage/`)는 워크플로가 저장소 이름을 읽어 자동으로 넣는다. 저장소 이름을 바꿔도 따라간다.
+
+배포본을 로컬에서 미리 보려면:
 
 ```bash
-VITE_BASE=/저장소이름/ npm run build
-# dist/ 폴더를 gh-pages 브랜치에 올린다
+$env:VITE_BASE="/cable-storage/"; npm run build   # PowerShell
+npm run preview
 ```
 
 PWA 로 설치하려면 **HTTPS 가 필요하다.** GitHub Pages 는 기본으로 HTTPS 를 제공한다.
+개발 서버를 휴대폰에서 열면(사내망 IP, HTTP) 화면은 보이지만 설치와 오프라인은 동작하지 않는다.
 
 ## 개선 아이디어
 
