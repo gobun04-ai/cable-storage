@@ -13,6 +13,7 @@ import {
   TrashIcon,
 } from '../components/Icons'
 import { IconButton } from '../components/IconButton'
+import { InstallBanner } from '../components/InstallBanner'
 import { ProjectFormSheet, type ProjectFormValues } from '../components/ProjectFormSheet'
 import { EmptyState, ErrorState, ListSkeleton } from '../components/States'
 import { deleteProject, listProjects, loadProject, saveProject, StorageError } from '../lib/db'
@@ -200,6 +201,8 @@ export function ProjectListScreen() {
       />
 
       <main className="app-main">
+        <InstallBanner />
+
         {state.status === 'loading' && <ListSkeleton rows={3} />}
 
         {state.status === 'error' && (

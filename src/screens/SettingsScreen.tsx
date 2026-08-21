@@ -9,6 +9,7 @@ import { exportBackup, parseBackup, restoreProjects } from '../lib/backup'
 import { requestPersistentStorage, StorageError, type ThemePreference } from '../lib/db'
 import { formatDateTime } from '../lib/format'
 import { log } from '../lib/logger'
+import { useInstallPrompt } from '../state/useInstallPrompt'
 import { useSettings } from '../state/SettingsProvider'
 import { useToast } from '../state/ToastProvider'
 import type { Project } from '../types'
@@ -41,11 +42,13 @@ export function SettingsScreen() {
   const navigate = useNavigate()
   const toast = useToast()
   const { settings, setTheme, markBackedUp } = useSettings()
+  const { canInstall, installed, install } = useInstallPrompt()
 
   const [storage, setStorage] = useState<StorageInfo>({ usageBytes: null, quotaBytes: null, persisted: false })
   const [backingUp, setBackingUp] = useState(false)
   const [restoring, setRestoring] = useState(false)
   const [pendingRestore, setPendingRestore] = useState<{ projects: Project[]; skipped: number } | null>(null)
+  const [installing, setInstalling] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -120,6 +123,24 @@ export function SettingsScreen() {
     }
   }
 
+  async function handleInstall(): Promise<void> {
+    if (installing) return
+    setInstalling(true)
+    try {
+      const outcome = await install()
+      if (outcome === 'accepted') {
+        toast.show({ message: '홈 화면에 추가했습니다. 이제 아이콘으로 바로 열 수 있습니다.', tone: 'success' })
+      } else if (outcome === 'unavailable') {
+        toast.show({
+          message: '설치 창을 열 수 없습니다. 크롬 메뉴의 "홈 화면에 추가"를 눌러 주세요.',
+          tone: 'error',
+        })
+      }
+    } finally {
+      setInstalling(false)
+    }
+  }
+
   async function handleRequestPersist(): Promise<void> {
     const granted = await requestPersistentStorage()
     setStorage((prev) => ({ ...prev, persisted: granted }))
@@ -148,6 +169,32 @@ export function SettingsScreen() {
                 options={THEME_OPTIONS}
                 onChange={setTheme}
               />
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>홈 화면</h2>
+            <div className={styles.card}>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>설치 상태</span>
+                <span className={styles.infoValue}>
+                  {installed ? '홈 화면 앱으로 실행 중' : canInstall ? '설치할 수 있음' : '설치 안 됨'}
+                </span>
+              </div>
+
+              {canInstall && (
+                <Button variant="primary" loading={installing} onClick={() => void handleInstall()}>
+                  홈 화면에 설치
+                </Button>
+              )}
+
+              <p className={styles.sectionHint}>
+                {installed
+                  ? '아이콘으로 실행 중입니다. 통신이 끊겨도 그대로 열립니다.'
+                  : canInstall
+                    ? '설치하면 아이콘으로 바로 열리고, 통신이 끊긴 현장에서도 씁니다.'
+                    : '이미 설치했거나, 이 브라우저가 설치를 지원하지 않는 경우입니다. 크롬 메뉴의 "홈 화면에 추가"로도 설치할 수 있습니다.'}
+              </p>
             </div>
           </section>
 
