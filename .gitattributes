@@ -1,0 +1,8 @@
+# 저장소에는 항상 LF 로 저장한다. 윈도우·리눅스를 오가도 줄바꿈만 바뀐 diff 가 생기지 않게 한다.
+* text=auto eol=lf
+
+# 바이너리는 손대지 않는다
+*.png binary
+*.ico binary
+*.woff2 binary
+*.xlsx binary
