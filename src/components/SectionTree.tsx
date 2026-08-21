@@ -1,0 +1,145 @@
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, ChevronRightIcon, MoreVerticalIcon } from './Icons'
+import { IconButton } from './IconButton'
+import { RecordList, type RecordHandlers } from './RecordList'
+import { countSubtree } from '../lib/tree'
+import type { Id, SectionNode } from '../types'
+import styles from './SectionTree.module.css'
+
+interface SectionTreeProps {
+  nodes: SectionNode[]
+  collapsed: ReadonlySet<Id>
+  /** 순서 바꾸기 모드에서는 메뉴 대신 위/아래 버튼을 보여 주고, 기록 목록은 감춘다 */
+  reorderMode: boolean
+  onToggle: (id: Id) => void
+  onMenu: (node: SectionNode) => void
+  onMove: (id: Id, direction: -1 | 1) => void
+  records: RecordHandlers
+}
+
+export function SectionTree(props: SectionTreeProps) {
+  const { nodes, reorderMode } = props
+
+  return (
+    <ul className={`${styles.tree} ${reorderMode ? styles.reordering : ''}`}>
+      {nodes.map((node, index) => (
+        <SectionNodeView
+          key={node.section.id}
+          node={node}
+          isFirst={index === 0}
+          isLast={index === nodes.length - 1}
+          {...props}
+        />
+      ))}
+    </ul>
+  )
+}
+
+interface NodeViewProps extends SectionTreeProps {
+  node: SectionNode
+  isFirst: boolean
+  isLast: boolean
+}
+
+function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
+  const { collapsed, reorderMode, onToggle, onMenu, onMove, records } = shared
+
+  const counts = countSubtree(node)
+  const hasChildren = node.children.length > 0
+  const hasOwnRecords = node.cables.length > 0 || node.equipments.length > 0
+  const canCollapse = hasChildren || hasOwnRecords
+  const isCollapsed = collapsed.has(node.section.id)
+  const expanded = canCollapse ? !isCollapsed : true
+
+  return (
+    <li className={styles.node}>
+      <div className={styles.card}>
+        <div className={styles.row}>
+          <button
+            type="button"
+            className={styles.twisty}
+            disabled={!canCollapse}
+            aria-expanded={canCollapse ? expanded : undefined}
+            aria-label={canCollapse ? (expanded ? '내용 접기' : '내용 펼치기') : '접을 내용 없음'}
+            onClick={() => onToggle(node.section.id)}
+          >
+            {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+          </button>
+
+          <button
+            type="button"
+            className={styles.main}
+            onClick={() => (canCollapse ? onToggle(node.section.id) : onMenu(node))}
+          >
+            <span className={styles.titleLine}>
+              <span className={styles.numbering}>{node.numbering}</span>
+              <span className={styles.title}>{node.section.title}</span>
+            </span>
+
+            {node.section.memo !== '' && <span className={styles.memo}>{node.section.memo}</span>}
+
+            {/* 접었을 때는 안에 무엇이 얼마나 들었는지만 요약해서 보여 준다 */}
+            {!expanded && (counts.descendants > 0 || counts.cables > 0 || counts.equipments > 0) && (
+              <span className={styles.summary}>
+                {counts.descendants > 0 && <span>하위 {counts.descendants}</span>}
+                {counts.cables > 0 && <span>케이블 {counts.cables}</span>}
+                {counts.equipments > 0 && <span>장비 {counts.equipments}</span>}
+              </span>
+            )}
+          </button>
+
+          <div className={styles.controls}>
+            {reorderMode ? (
+              <>
+                <IconButton
+                  compact
+                  label={`${node.section.title} 위로`}
+                  icon={<ArrowUpIcon size={18} />}
+                  disabled={isFirst}
+                  onClick={() => onMove(node.section.id, -1)}
+                />
+                <IconButton
+                  compact
+                  label={`${node.section.title} 아래로`}
+                  icon={<ArrowDownIcon size={18} />}
+                  disabled={isLast}
+                  onClick={() => onMove(node.section.id, 1)}
+                />
+              </>
+            ) : (
+              <IconButton
+                compact
+                label={`${node.section.title} 메뉴`}
+                icon={<MoreVerticalIcon size={18} />}
+                onClick={() => onMenu(node)}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* 순서를 바꾸는 동안에는 목록을 감춰 화면을 단순하게 유지한다 */}
+        {expanded && !reorderMode && (
+          <RecordList
+            sectionId={node.section.id}
+            cables={node.cables}
+            equipments={node.equipments}
+            {...records}
+          />
+        )}
+      </div>
+
+      {hasChildren && expanded && (
+        <ul className={styles.children}>
+          {node.children.map((child, index) => (
+            <SectionNodeView
+              key={child.section.id}
+              node={child}
+              isFirst={index === 0}
+              isLast={index === node.children.length - 1}
+              {...shared}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+}

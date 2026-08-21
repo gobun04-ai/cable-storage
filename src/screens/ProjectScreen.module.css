@@ -1,0 +1,64 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbarInfo {
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbarActions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--sp-1);
+}
+
+/* 순서 바꾸기 모드임을 알리는 안내 줄 */
+.modeBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+}
+
+.projectMemo {
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-3);
+  background: var(--surface);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  line-height: var(--lh-normal);
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-sticky);
+  padding: var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+}
+
+.bottomBarInner {
+  max-width: 720px;
+  margin: 0 auto;
+}

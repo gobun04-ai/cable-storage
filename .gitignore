@@ -1,0 +1,26 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# 로그
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# 에디터 개인 설정
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 환경변수 (실제 값은 절대 커밋하지 않는다)
+.env
+.env.*
+!.env.example

@@ -1,0 +1,80 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  /* 라벨과 입력칸은 가깝게 — 항목 사이 간격(--sp-4)보다 좁아야 한 묶음으로 읽힌다 */
+  gap: var(--sp-1);
+}
+
+.label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+}
+
+.required {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+.control {
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: var(--fs-md);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.control::placeholder {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.control:disabled {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.invalid {
+  border-color: var(--danger);
+}
+
+.invalid:focus {
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+.textarea {
+  min-height: 88px;
+  resize: vertical;
+  line-height: var(--lh-normal);
+}
+
+.hint {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--danger);
+}

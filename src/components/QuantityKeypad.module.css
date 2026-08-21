@@ -1,0 +1,128 @@
+.keypad {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  animation: reveal var(--dur-base) var(--ease-out);
+}
+
+/* 키패드가 입력칸을 가릴 수 있으므로 현재 합계를 키패드 위에 다시 보여 준다 */
+.readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: 28px;
+  padding: 0 var(--sp-1);
+  font-size: var(--fs-sm);
+}
+
+.readoutValue {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.readoutUnit {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+}
+
+.readoutTerms {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.readoutError {
+  color: var(--danger);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-tight);
+  text-align: right;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+}
+
+.key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 var(--sp-1);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.key:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+.key:active {
+  transform: translateY(1px);
+  background: var(--border);
+}
+
+/* 연산자·괄호는 숫자와 구분되게 */
+.operator {
+  background: var(--surface-2);
+  color: var(--accent);
+  font-weight: var(--fw-bold);
+}
+
+.operator:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.danger {
+  color: var(--danger);
+  font-size: var(--fs-md);
+}
+
+.danger:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+
+.done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+}
+
+.done:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

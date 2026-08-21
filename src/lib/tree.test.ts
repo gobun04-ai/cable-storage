@@ -1,0 +1,244 @@
+import { describe, expect, it } from 'vitest'
+import {
+  addSection,
+  buildTree,
+  collectSubtreeIds,
+  countSubtree,
+  flattenTree,
+  moveSection,
+  normalizeOrders,
+  removeSection,
+  updateSection,
+} from './tree'
+import type { CableRecord, EquipmentRecord, ProjectBody, Section } from '../types'
+
+function section(id: string, parentId: string | null, order: number, title = id): Section {
+  return { id, parentId, title, memo: '', order }
+}
+
+function cable(id: string, sectionId: string, order = 0): CableRecord {
+  return { id, sectionId, cableType: 'CV 4C 25sq', from: 'A', to: 'B', quantityExpr: '10', note: '', order }
+}
+
+function equipment(id: string, sectionId: string, order = 0): EquipmentRecord {
+  return { id, sectionId, kind: 'replace', name: 'MCCB', qty: 1, spec: '', note: '', order }
+}
+
+/**
+ *  s1
+ *   └ s1a
+ *      └ s1a1
+ *   └ s1b
+ *  s2
+ */
+function sampleBody(): ProjectBody {
+  return {
+    sections: [
+      section('s1', null, 0),
+      section('s2', null, 1),
+      section('s1a', 's1', 0),
+      section('s1b', 's1', 1),
+      section('s1a1', 's1a', 0),
+    ],
+    cables: [cable('c1', 's1a1'), cable('c2', 's1b')],
+    equipments: [equipment('e1', 's1a1')],
+  }
+}
+
+describe('buildTree', () => {
+  it('중첩 단계에 맞춰 1, 1.1, 1.1.1 형태로 번호를 매긴다', () => {
+    const tree = buildTree(sampleBody())
+    const numbering = flattenTree(tree).map((node) => `${node.numbering} ${node.section.id}`)
+
+    expect(numbering).toEqual(['1 s1', '1.1 s1a', '1.1.1 s1a1', '1.2 s1b', '2 s2'])
+  })
+
+  it('배열에 담긴 순서가 아니라 order 값 순서로 정렬한다', () => {
+    const body: ProjectBody = {
+      sections: [section('b', null, 1), section('a', null, 0)],
+      cables: [],
+      equipments: [],
+    }
+
+    expect(buildTree(body).map((n) => n.section.id)).toEqual(['a', 'b'])
+  })
+
+  it('깊이를 0부터 센다', () => {
+    const tree = buildTree(sampleBody())
+    const depths = flattenTree(tree).map((node) => node.depth)
+
+    expect(depths).toEqual([0, 1, 2, 1, 0])
+  })
+
+  it('케이블과 장비를 소속 항목에 붙이고 order 순으로 정렬한다', () => {
+    const body: ProjectBody = {
+      sections: [section('s1', null, 0)],
+      cables: [cable('c2', 's1', 1), cable('c1', 's1', 0)],
+      equipments: [equipment('e1', 's1', 0)],
+    }
+    const [node] = buildTree(body)
+
+    expect(node?.cables.map((c) => c.id)).toEqual(['c1', 'c2'])
+    expect(node?.equipments.map((e) => e.id)).toEqual(['e1'])
+  })
+
+  it('부모가 사라진 항목을 버리지 않고 최상위로 끌어올린다', () => {
+    const body: ProjectBody = {
+      sections: [section('orphan', 'gone', 0)],
+      cables: [],
+      equipments: [],
+    }
+
+    expect(buildTree(body).map((n) => n.section.id)).toEqual(['orphan'])
+  })
+
+  it('부모-자식이 고리를 이뤄도 무한 재귀에 빠지지 않는다', () => {
+    const body: ProjectBody = {
+      sections: [section('a', 'b', 0), section('b', 'a', 0)],
+      cables: [],
+      equipments: [],
+    }
+
+    // 고리를 이룬 항목은 최상위 후보가 없으므로 화면에 나오지 않지만, 멈추지 않고 끝나야 한다
+    expect(() => buildTree(body)).not.toThrow()
+  })
+
+  it('항목이 하나도 없으면 빈 배열을 돌려준다', () => {
+    expect(buildTree({ sections: [], cables: [], equipments: [] })).toEqual([])
+  })
+})
+
+describe('addSection', () => {
+  it('같은 부모의 마지막 순서 뒤에 붙인다', () => {
+    const { body, sectionId } = addSection(sampleBody(), 's1', '새 항목')
+    const added = body.sections.find((s) => s.id === sectionId)
+
+    expect(added?.parentId).toBe('s1')
+    expect(added?.order).toBe(2)
+  })
+
+  it('parentId 가 null 이면 최상위에 붙인다', () => {
+    const { body, sectionId } = addSection(sampleBody(), null, '새 항목')
+    const added = body.sections.find((s) => s.id === sectionId)
+
+    expect(added?.parentId).toBeNull()
+    expect(added?.order).toBe(2)
+  })
+
+  it('원본 본문을 바꾸지 않는다', () => {
+    const original = sampleBody()
+    addSection(original, null, '새 항목')
+
+    expect(original.sections).toHaveLength(5)
+  })
+})
+
+describe('updateSection', () => {
+  it('지정한 항목만 고친다', () => {
+    const body = updateSection(sampleBody(), 's1a', { title: '바뀐 이름', memo: '메모' })
+
+    expect(body.sections.find((s) => s.id === 's1a')?.title).toBe('바뀐 이름')
+    expect(body.sections.find((s) => s.id === 's1')?.title).toBe('s1')
+  })
+})
+
+describe('removeSection', () => {
+  it('하위 항목과 그 안의 케이블·장비까지 함께 지운다', () => {
+    const body = removeSection(sampleBody(), 's1')
+
+    expect(body.sections.map((s) => s.id)).toEqual(['s2'])
+    expect(body.cables).toHaveLength(0)
+    expect(body.equipments).toHaveLength(0)
+  })
+
+  it('형제 항목과 그 기록은 건드리지 않는다', () => {
+    const body = removeSection(sampleBody(), 's1a')
+
+    expect(body.sections.map((s) => s.id).sort()).toEqual(['s1', 's1b', 's2'])
+    expect(body.cables.map((c) => c.id)).toEqual(['c2'])
+  })
+
+  it('삭제 후 남은 형제의 순서를 0부터 다시 매긴다', () => {
+    const body = removeSection(sampleBody(), 's1a')
+    const s1b = body.sections.find((s) => s.id === 's1b')
+
+    expect(s1b?.order).toBe(0)
+  })
+
+  it('없는 항목을 지우려 해도 내용이 그대로 남는다', () => {
+    const body = removeSection(sampleBody(), 'nope')
+
+    expect(body.sections).toHaveLength(5)
+  })
+})
+
+describe('moveSection', () => {
+  it('같은 부모 안에서 한 칸 위로 옮긴다', () => {
+    const body = moveSection(sampleBody(), 's1b', -1)
+    const order = buildTree(body)[0]?.children.map((n) => n.section.id)
+
+    expect(order).toEqual(['s1b', 's1a'])
+  })
+
+  it('같은 부모 안에서 한 칸 아래로 옮긴다', () => {
+    const body = moveSection(sampleBody(), 's1', 1)
+
+    expect(buildTree(body).map((n) => n.section.id)).toEqual(['s2', 's1'])
+  })
+
+  it('맨 위에서 더 올리면 아무 변화가 없다', () => {
+    const before = sampleBody()
+    const after = moveSection(before, 's1a', -1)
+
+    expect(after).toBe(before)
+  })
+
+  it('맨 아래에서 더 내리면 아무 변화가 없다', () => {
+    const before = sampleBody()
+    const after = moveSection(before, 's2', 1)
+
+    expect(after).toBe(before)
+  })
+
+  it('다른 부모의 항목과 섞이지 않는다', () => {
+    const body = moveSection(sampleBody(), 's2', -1)
+
+    expect(buildTree(body).map((n) => n.section.id)).toEqual(['s2', 's1'])
+  })
+})
+
+describe('collectSubtreeIds', () => {
+  it('자기 자신과 모든 자손을 모은다', () => {
+    const ids = collectSubtreeIds(sampleBody().sections, 's1')
+
+    expect([...ids].sort()).toEqual(['s1', 's1a', 's1a1', 's1b'])
+  })
+
+  it('자식이 없으면 자기 자신만 담는다', () => {
+    const ids = collectSubtreeIds(sampleBody().sections, 's2')
+
+    expect([...ids]).toEqual(['s2'])
+  })
+})
+
+describe('countSubtree', () => {
+  it('자기 것과 하위 전체의 개수를 합산한다', () => {
+    const [first] = buildTree(sampleBody())
+    const counts = countSubtree(first!)
+
+    expect(counts).toEqual({ cables: 2, equipments: 1, descendants: 3 })
+  })
+})
+
+describe('normalizeOrders', () => {
+  it('형제 그룹마다 0부터 빈틈없이 다시 매긴다', () => {
+    const sections = [section('a', null, 5), section('b', null, 9), section('c', 'a', 3)]
+    const result = normalizeOrders(sections)
+
+    expect(result.map((s) => [s.id, s.order])).toEqual([
+      ['a', 0],
+      ['b', 1],
+      ['c', 0],
+    ])
+  })
+})

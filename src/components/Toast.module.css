@@ -1,0 +1,101 @@
+.viewport {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--sp-4) + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: min(560px, calc(100vw - var(--sp-4) * 2));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--text-muted);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  pointer-events: auto;
+  animation: slideUp var(--dur-base) var(--ease-out);
+}
+
+.message {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: var(--lh-normal);
+  word-break: break-word;
+}
+
+/* 색만으로 종류를 구분하지 않도록 왼쪽 테두리 + 아이콘을 함께 쓴다 */
+.success {
+  border-left-color: var(--success);
+}
+.error {
+  border-left-color: var(--danger);
+}
+.info {
+  border-left-color: var(--accent);
+}
+
+.icon {
+  flex: 0 0 auto;
+  color: var(--danger);
+}
+
+.action {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 var(--sp-3);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.action:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.close:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

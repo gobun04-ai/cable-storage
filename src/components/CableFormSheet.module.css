@@ -1,0 +1,45 @@
+/* 물량 칸 아래에 실시간으로 나오는 계산 결과 */
+.total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  color: var(--accent);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.totalUnit {
+  font-weight: var(--fw-regular);
+}
+
+.totalTerms {
+  color: var(--text-muted);
+  font-weight: var(--fw-regular);
+}
+
+/* From → To 를 한 줄에 나란히 */
+.pair {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: var(--sp-2);
+}
+
+.arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--tap-min);
+  color: var(--text-muted);
+}
+
+/* 화면이 좁으면 위아래로 쌓는다 */
+@media (max-width: 400px) {
+  .pair {
+    grid-template-columns: 1fr;
+  }
+
+  .arrow {
+    display: none;
+  }
+}

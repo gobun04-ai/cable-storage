@@ -1,0 +1,8 @@
+.description {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  white-space: pre-line;
+  word-break: break-word;
+}

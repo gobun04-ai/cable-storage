@@ -1,0 +1,49 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+}
+
+.segments {
+  display: flex;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+}
+
+.segment {
+  flex: 1 1 0;
+  min-height: 40px;
+  padding: 0 var(--sp-2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.segment:hover:not(.selected) {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* 선택 상태는 색만이 아니라 배경·테두리·굵기로도 구분한다 */
+.selected {
+  background: var(--bg);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: var(--fw-bold);
+  box-shadow: var(--shadow-1);
+}
