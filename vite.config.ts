@@ -39,6 +39,12 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,png,svg,webmanifest}'],
         cleanupOutdatedCaches: true,
         navigateFallback: `${base}index.html`,
+        /*
+         * 새 서비스 워커가 활성화되는 즉시 이미 열려 있는 화면까지 넘겨받게 한다.
+         * 이것이 없으면 '지금 적용'을 눌러 새로고침해도 옛 워커가 계속 옛 파일을 내주어
+         * 화면이 그대로다. skipWaiting 은 켜지 않는다 — 교체 시점은 사용자가 정한다.
+         */
+        clientsClaim: true,
       },
     }),
   ],
