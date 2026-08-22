@@ -29,9 +29,11 @@
 }
 
 .card {
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
+  /* 바탕보다 한 층 떠 있음을 아주 옅은 그림자로 거든다 */
+  box-shadow: var(--shadow-1);
   transition:
     border-color var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out);
@@ -42,7 +44,7 @@
   align-items: center;
   gap: var(--sp-1);
   min-height: var(--tap-lg);
-  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-1);
 }
 
 .twisty {
@@ -102,7 +104,7 @@
   }
 
   .main:hover {
-    background: var(--surface);
+    background: var(--surface-2);
   }
 }
 
@@ -111,7 +113,7 @@
  * hover 뒤에 두어 마우스로 누를 때도 눌림이 hover 를 이기게 한다.
  */
 .twisty:active:not(:disabled) {
-  background: var(--border);
+  background: var(--pressed);
   color: var(--text);
 }
 

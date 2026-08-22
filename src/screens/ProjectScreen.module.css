@@ -38,9 +38,11 @@
 
 .projectMemo {
   margin-bottom: var(--sp-4);
-  padding: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
   background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--r-md);
+  box-shadow: var(--shadow-1);
   font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: var(--lh-normal);

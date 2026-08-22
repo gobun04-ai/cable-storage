@@ -22,7 +22,7 @@
   display: flex;
   flex-direction: column;
   max-height: 92dvh;
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-bottom: none;
   border-radius: var(--r-lg) var(--r-lg) 0 0;
@@ -73,7 +73,8 @@
   gap: var(--sp-2);
   padding: var(--sp-3) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
-  background: var(--surface);
+  /* 시트 본문보다 한 단 들어가 보이게 해 버튼 줄임을 구분한다 */
+  background: var(--bg);
 }
 
 .footer > * {

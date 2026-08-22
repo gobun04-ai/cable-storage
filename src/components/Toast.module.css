@@ -17,7 +17,8 @@
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
-  background: var(--surface-2);
+  /* 화면 맨 위에 떠 있는 요소이므로 가장 밝은 면 + 짙은 그림자로 띄운다 */
+  background: var(--surface);
   border: 1px solid var(--border);
   border-left: 4px solid var(--text-muted);
   border-radius: var(--r-md);
@@ -95,7 +96,7 @@
   }
 
   .close:hover {
-    background: var(--border);
+    background: var(--surface-2);
     color: var(--text);
   }
 }
@@ -105,7 +106,7 @@
 }
 
 .close:active {
-  background: var(--border);
+  background: var(--pressed);
   color: var(--text);
 }
 

@@ -12,6 +12,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
+  box-shadow: var(--shadow-1);
   animation: appear var(--dur-base) var(--ease-out);
 }
 

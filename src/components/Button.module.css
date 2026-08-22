@@ -35,7 +35,7 @@
 
 /* ---- secondary (테두리형) ---- */
 .secondary {
-  background: var(--bg);
+  background: var(--surface);
   border-color: var(--border-strong);
   color: var(--text);
 }
@@ -62,7 +62,7 @@
   }
 
   .secondary:hover:not(:disabled) {
-    background: var(--surface);
+    background: var(--surface-2);
     border-color: var(--accent);
     color: var(--accent);
   }
@@ -86,13 +86,13 @@
 }
 
 .secondary:active:not(:disabled) {
-  background: var(--surface-2);
+  background: var(--pressed);
   border-color: var(--border-strong);
   color: var(--text);
 }
 
 .ghost:active:not(:disabled) {
-  background: var(--border);
+  background: var(--pressed);
 }
 
 .danger:active:not(:disabled) {

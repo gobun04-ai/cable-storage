@@ -20,7 +20,7 @@
   width: 100%;
   min-height: var(--tap-min);
   padding: var(--sp-2) var(--sp-3);
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--r-md);
   color: var(--text);

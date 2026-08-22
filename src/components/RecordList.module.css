@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
-  padding: 0 var(--sp-2) var(--sp-2);
+  padding: 0 var(--sp-3) var(--sp-3);
 }
 
 .group {
@@ -32,7 +32,7 @@
   flex-direction: column;
   gap: 2px;
   min-height: var(--tap-min);
-  padding: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
   background: transparent;
   border: none;
   border-radius: var(--r-sm);
@@ -42,13 +42,13 @@
 
 @media (hover: hover) {
   .rowBody:hover {
-    background: var(--surface);
+    background: var(--surface-2);
   }
 }
 
 /* 눌린 순간. 터치에는 hover 가 없어 이것이 유일한 반응이므로 반드시 둔다. */
 .rowBody:active {
-  background: var(--surface-2);
+  background: var(--pressed);
 }
 
 /*
@@ -101,11 +101,12 @@
   color: var(--text-muted);
 }
 
+/* 물량은 이 앱을 쓰는 이유다. 보조 정보와 같은 크기로 두지 않는다. */
 .quantity {
   display: inline-flex;
   align-items: baseline;
   gap: var(--sp-1);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
 }
@@ -115,8 +116,10 @@
   font-weight: var(--fw-bold);
 }
 
+/* 수식 원문은 검산용 보조 정보이므로 합계보다 작게 둔다 */
 .quantityExpr {
   color: var(--text-muted);
+  font-size: var(--fs-xs);
   word-break: break-all;
 }
 

@@ -36,19 +36,19 @@
 
 @media (hover: hover) {
   .segment:hover:not(.selected) {
-    background: var(--bg);
+    background: var(--surface);
     color: var(--text);
   }
 }
 
 .segment:active:not(.selected) {
-  background: var(--border);
+  background: var(--pressed);
   color: var(--text);
 }
 
 /* 선택 상태는 색만이 아니라 배경·테두리·굵기로도 구분한다 */
 .selected {
-  background: var(--bg);
+  background: var(--surface);
   border-color: var(--accent);
   color: var(--accent);
   font-weight: var(--fw-bold);

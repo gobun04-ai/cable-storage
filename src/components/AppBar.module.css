@@ -2,7 +2,8 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  background: var(--bg);
+  /* 페이지 바탕보다 한 층 위에 얹힌 면이므로 밝기로 구분된다 */
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding-top: env(safe-area-inset-top);
 }

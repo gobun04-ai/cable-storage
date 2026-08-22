@@ -3,7 +3,8 @@
   flex-direction: column;
   gap: var(--sp-2);
   padding: var(--sp-2);
-  background: var(--surface);
+  /* 시트 면보다 한 단 들어가 보이게 해 키가 그 위에 얹힌 것으로 읽히게 한다 */
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   animation: reveal var(--dur-base) var(--ease-out);
@@ -55,9 +56,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
+  min-height: var(--tap-lg);
   padding: 0 var(--sp-1);
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   color: var(--text);
@@ -119,7 +120,7 @@
  */
 .key:active {
   transform: translateY(1px);
-  background: var(--border);
+  background: var(--pressed);
   border-color: var(--border-strong);
 }
 

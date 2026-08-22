@@ -23,7 +23,7 @@
 }
 
 .iconButton:active:not(:disabled) {
-  background: var(--border);
+  background: var(--pressed);
   color: var(--text);
 }
 

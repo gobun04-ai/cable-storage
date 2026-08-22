@@ -35,6 +35,16 @@ function messageOf(error: unknown, fallback: string): string {
   return error instanceof StorageError ? error.userMessage : fallback
 }
 
+/** 건수 요약. 아직 적지 않은 종류는 빼서 빈 공사가 0 으로 도배되지 않게 한다. */
+function countsLabel({ counts }: ProjectMeta): string {
+  if (counts.sections === 0) return '아직 비어 있음'
+
+  const parts = [`항목 ${counts.sections}`]
+  if (counts.cables > 0) parts.push(`케이블 ${counts.cables}`)
+  if (counts.equipments > 0) parts.push(`장비 ${counts.equipments}`)
+  return parts.join(' · ')
+}
+
 export function ProjectListScreen() {
   const navigate = useNavigate()
   const toast = useToast()
@@ -240,9 +250,7 @@ export function ProjectListScreen() {
                   <span className={styles.name}>{project.name}</span>
                   {project.site !== '' && <span className={styles.site}>{project.site}</span>}
                   <span className={styles.meta}>
-                    <span className={styles.chip}>항목 {project.counts.sections}</span>
-                    <span className={styles.chip}>케이블 {project.counts.cables}</span>
-                    <span className={styles.chip}>장비 {project.counts.equipments}</span>
+                    <span>{countsLabel(project)}</span>
                     <span>{formatRelativeDate(project.updatedAt)}</span>
                   </span>
                 </Link>

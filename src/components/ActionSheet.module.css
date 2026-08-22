@@ -42,7 +42,7 @@
 
 /* 눌린 순간. hover 뒤에 두어 마우스로 누를 때도 눌림이 hover 를 이기게 한다. */
 .item:active:not(:disabled) {
-  background: var(--border);
+  background: var(--pressed);
 }
 
 .danger:active:not(:disabled) {
