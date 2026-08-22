@@ -2,7 +2,7 @@ import { evaluateQuantity } from '../lib/expr'
 import { formatNumber } from '../lib/format'
 import type { CableRecord, EquipmentRecord, Id } from '../types'
 import { Button } from './Button'
-import { AlertIcon, ChevronRightIcon, MoreVerticalIcon, PlusIcon } from './Icons'
+import { AlertIcon, MoreVerticalIcon, PlusIcon } from './Icons'
 import { IconButton } from './IconButton'
 import styles from './RecordList.module.css'
 
@@ -98,9 +98,11 @@ function CableRow({
         {hasRoute && (
           <span className={styles.route}>
             <RouteChip value={cable.from} />
-            {/* 화면에서는 꺾쇠가, 읽어 주는 기기에서는 조사가 방향을 알린다 */}
+            {/* 화면에서는 화살표가, 읽어 주는 기기에서는 조사가 방향을 알린다 */}
             <span className="sr-only">에서</span>
-            <ChevronRightIcon size={12} className={styles.routeArrow} />
+            <span className={styles.routeArrow} aria-hidden="true">
+              →
+            </span>
             <RouteChip value={cable.to} />
             <span className="sr-only">까지</span>
           </span>

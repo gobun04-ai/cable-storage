@@ -31,6 +31,8 @@
   justify-content: center;
   height: var(--tap-min);
   color: var(--text-muted);
+  font-size: var(--fs-lg);
+  line-height: 1;
 }
 
 /* 화면이 좁으면 위아래로 쌓는다 */

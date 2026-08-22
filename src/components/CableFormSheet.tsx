@@ -5,7 +5,6 @@ import { suggestValues } from '../lib/suggest'
 import type { CableInput } from '../lib/records'
 import type { ProjectBody } from '../types'
 import { Button } from './Button'
-import { ChevronRightIcon } from './Icons'
 import { QuantityKeypad } from './QuantityKeypad'
 import { Sheet } from './Sheet'
 import { SuggestTextField } from './SuggestTextField'
@@ -148,7 +147,7 @@ export function CableFormSheet({
           onValueChange={(from) => setValues((prev) => ({ ...prev, from }))}
         />
         <span className={styles.arrow} aria-hidden="true">
-          <ChevronRightIcon size={18} />
+          →
         </span>
         <SuggestTextField
           label="종단 (To)"
