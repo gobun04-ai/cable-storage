@@ -23,6 +23,7 @@ import { SectionFormSheet, type SectionFormValues } from '../components/SectionF
 import { SectionTree } from '../components/SectionTree'
 import { EmptyState, ErrorState, ListSkeleton } from '../components/States'
 import { loadProject, saveProject, StorageError } from '../lib/db'
+import { buildSectionText } from '../lib/exportText'
 import { log } from '../lib/logger'
 import {
   addCable,
@@ -38,6 +39,7 @@ import {
   type CableInput,
   type EquipmentInput,
 } from '../lib/records'
+import { copyText } from '../lib/share'
 import { rememberValue } from '../lib/suggest'
 import {
   addSection,
@@ -249,6 +251,29 @@ export function ProjectScreen() {
     applyBody(project, (body) => moveSection(body, sectionId, direction), '순서를 바꾸지 못했습니다.')
   }
 
+  /** 항목 하나만 떼어 클립보드에 담는다. 공사 전체를 보내지 않고 이 구역만 전할 때 쓴다. */
+  async function handleCopySection(node: SectionNode): Promise<void> {
+    if (!project) return
+
+    const text = buildSectionText(project, node.section.id)
+    if (text === '') {
+      toast.show({ message: '이미 삭제된 항목입니다.', tone: 'error' })
+      return
+    }
+
+    const label = `${node.numbering} ${node.section.title}`
+    if (await copyText(text)) {
+      log.info('section_copied', { projectId, sectionId: node.section.id, length: text.length })
+      toast.show({ message: `'${label}' 내용을 복사했습니다. 붙여넣기 하세요.`, tone: 'success' })
+      return
+    }
+
+    toast.show({
+      message: '복사하지 못했습니다. 정리·공유 화면에서 미리보기를 길게 눌러 직접 복사해 주세요.',
+      tone: 'error',
+    })
+  }
+
   // ---------- 케이블 ----------
 
   function handleCableSubmit(input: CableInput): void {
@@ -368,6 +393,13 @@ export function ProjectScreen() {
             label: '장비 추가',
             icon: <PlusIcon />,
             onClick: () => recordHandlers.onAddEquipment(menuNode.section.id),
+          },
+          {
+            key: 'copy',
+            label: '이 항목만 복사',
+            description: '하위 항목과 기록까지 텍스트로 복사합니다',
+            icon: <CopyIcon />,
+            onClick: () => void handleCopySection(menuNode),
           },
           {
             key: 'edit',
@@ -632,6 +664,7 @@ export function ProjectScreen() {
                   onToggle={toggle}
                   onMenu={setMenuNode}
                   onMove={handleMoveSection}
+                  onCopy={(node) => void handleCopySection(node)}
                   records={recordHandlers}
                   highlightId={highlightId}
                 />

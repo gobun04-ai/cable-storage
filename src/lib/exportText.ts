@@ -1,8 +1,8 @@
 import { evaluateQuantity } from './expr'
 import { formatDate, formatNumber } from './format'
 import { summarize, type ProjectSummary } from './summary'
-import { buildTree } from './tree'
-import type { CableRecord, EquipmentRecord, Project, SectionNode } from '../types'
+import { buildTree, collectSubtreeIds, flattenTree } from './tree'
+import type { CableRecord, EquipmentRecord, Id, Project, SectionNode } from '../types'
 
 /**
  * 카카오톡·문자에 그대로 붙여 넣을 정리 텍스트를 만든다.
@@ -55,9 +55,14 @@ function equipmentLine(equipment: EquipmentRecord, depth: number): string[] {
   return lines
 }
 
-function sectionLines(node: SectionNode): string[] {
+/**
+ * baseDepth 는 들여쓰기의 기준점이다.
+ * 항목 하나만 떼어 낼 때 그 항목이 0 단부터 시작하게 해, 깊은 곳의 항목을 복사해도
+ * 앞에 빈 칸이 잔뜩 붙지 않게 한다.
+ */
+function sectionLines(node: SectionNode, baseDepth = 0): string[] {
   const lines: string[] = []
-  const depth = node.depth
+  const depth = node.depth - baseDepth
 
   // 최상위는 "1." 처럼 마침표를 붙이고, 하위는 이미 점이 들어 있으므로 "1.1" 그대로 쓴다
   const label = node.numbering.includes('.') ? node.numbering : `${node.numbering}.`
@@ -68,7 +73,7 @@ function sectionLines(node: SectionNode): string[] {
 
   for (const cable of node.cables) lines.push(...cableLine(cable, depth + 1))
   for (const equipment of node.equipments) lines.push(...equipmentLine(equipment, depth + 1))
-  for (const child of node.children) lines.push(...sectionLines(child))
+  for (const child of node.children) lines.push(...sectionLines(child, baseDepth))
 
   return lines
 }
@@ -109,6 +114,43 @@ function summaryLines(summary: ProjectSummary): string[] {
   }
 
   return lines
+}
+
+/**
+ * 항목 하나만(하위 항목과 그 안의 기록까지) 떼어 공유 텍스트를 만든다.
+ *
+ * 현장에서 공사 전체가 아니라 "이 구역만" 보내는 일이 잦다.
+ * 받는 쪽이 어느 공사의 어디인지 알 수 있도록 공사명을 머리에 남긴다.
+ * 없는 항목이면 빈 문자열을 돌려준다.
+ */
+export function buildSectionText(project: Project, sectionId: Id, now: number = Date.now()): string {
+  const node = flattenTree(buildTree(project.body)).find((item) => item.section.id === sectionId)
+  if (!node) return ''
+
+  const ids = collectSubtreeIds(project.body.sections, sectionId)
+  const summary = summarize({
+    sections: project.body.sections.filter((section) => ids.has(section.id)),
+    cables: project.body.cables.filter((cable) => ids.has(cable.sectionId)),
+    equipments: project.body.equipments.filter((equipment) => ids.has(equipment.sectionId)),
+  })
+
+  const lines: string[] = [`■ ${project.name}`]
+  if (project.site !== '') lines.push(`현장 : ${project.site}`)
+  lines.push(`작성 : ${formatDate(now)}`)
+
+  lines.push('')
+  lines.push(DIVIDER)
+  lines.push(...sectionLines(node, node.depth))
+  lines.push(DIVIDER)
+
+  // 적은 것이 없으면 집계 머리말만 덩그러니 남으므로 통째로 뺀다
+  const block = summaryLines(summary)
+  if (block.length > 1) {
+    lines.push('')
+    lines.push(...block)
+  }
+
+  return lines.join('\n')
 }
 
 export function buildShareText(project: Project, now: number = Date.now()): string {

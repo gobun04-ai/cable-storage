@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildShareText } from './exportText'
+import { buildSectionText, buildShareText } from './exportText'
 import type { Project } from '../types'
 
 /** 2026-08-21 12:00 (로컬) */
@@ -64,6 +64,68 @@ const SAMPLE = project({
       { id: 'e2', sectionId: 's1a', kind: 'new', name: '계전기', qty: 1, spec: '', note: '', order: 1 },
     ],
   },
+})
+
+describe('buildSectionText', () => {
+  it('받는 쪽이 어느 공사인지 알 수 있게 공사명을 머리에 남긴다', () => {
+    const text = buildSectionText(SAMPLE, 's1a', NOW)
+
+    expect(text.split('\n')[0]).toBe('■ 2026년 A공장 증설공사')
+    expect(text).toContain('현장 : A공장 1공장동')
+  })
+
+  it('고른 항목과 그 안의 기록만 담는다', () => {
+    const text = buildSectionText(SAMPLE, 's1a', NOW)
+
+    expect(text).toContain('MCC반')
+    expect(text).toContain('CV 4C 25sq')
+    expect(text).toContain('MCCB 100A')
+    // 다른 최상위 항목과 그 케이블은 들어가지 않는다
+    expect(text).not.toContain('옥외 배관')
+    expect(text).not.toContain('HFIX 2.5sq')
+  })
+
+  it('하위 항목까지 함께 담는다', () => {
+    const text = buildSectionText(SAMPLE, 's1', NOW)
+
+    expect(text).toContain('1층 전기실')
+    expect(text).toContain('1.1 MCC반')
+    expect(text).toContain('CV 4C 25sq')
+  })
+
+  it('깊은 곳의 항목을 떼어도 앞에 빈 칸이 붙지 않는다', () => {
+    const lines = buildSectionText(SAMPLE, 's1a', NOW).split('\n')
+    const title = lines.find((line) => line.includes('MCC반') && line.includes('1.1'))
+
+    expect(title).toBe('1.1 MCC반')
+  })
+
+  it('전체 번호를 유지해 원래 위치를 알 수 있게 한다', () => {
+    expect(buildSectionText(SAMPLE, 's1a', NOW)).toContain('1.1 MCC반')
+  })
+
+  it('그 항목만의 집계를 붙인다', () => {
+    const text = buildSectionText(SAMPLE, 's1a', NOW)
+
+    // s1a 의 케이블은 2+3+5 = 10 m 한 건뿐이다
+    expect(text).toContain('[케이블] 총 10 m / 1건')
+    expect(text).toContain('[교체 장비] 총 2개')
+    expect(text).toContain('[신규 장비] 총 1개')
+  })
+
+  it('적은 것이 없는 항목이면 집계 머리말을 덩그러니 남기지 않는다', () => {
+    const empty = project({
+      body: { sections: [{ id: 'x', parentId: null, title: '빈 구역', memo: '', order: 0 }], cables: [], equipments: [] },
+    })
+    const text = buildSectionText(empty, 'x', NOW)
+
+    expect(text).toContain('빈 구역')
+    expect(text).not.toContain('■ 집계')
+  })
+
+  it('없는 항목이면 빈 문자열을 돌려준다', () => {
+    expect(buildSectionText(SAMPLE, 'nope', NOW)).toBe('')
+  })
 })
 
 describe('buildShareText — 머리말', () => {

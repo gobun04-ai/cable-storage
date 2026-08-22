@@ -1,4 +1,4 @@
-import { ArrowDownIcon, ArrowUpIcon, ChevronRightIcon, MoreVerticalIcon } from './Icons'
+import { ArrowDownIcon, ArrowUpIcon, ChevronRightIcon, CopyIcon, MoreVerticalIcon } from './Icons'
 import { IconButton } from './IconButton'
 import { RecordList, type RecordHandlers } from './RecordList'
 import { countSubtree } from '../lib/tree'
@@ -13,6 +13,8 @@ interface SectionTreeProps {
   onToggle: (id: Id) => void
   onMenu: (node: SectionNode) => void
   onMove: (id: Id, direction: -1 | 1) => void
+  /** 이 항목만 텍스트로 복사한다. 공사 전체가 아니라 한 구역만 보낼 때 쓴다. */
+  onCopy: (node: SectionNode) => void
   records: RecordHandlers
   /** 방금 추가·복제되어 잠시 강조할 기록. 없으면 null. */
   highlightId: Id | null
@@ -52,7 +54,7 @@ function collapsedSummary(counts: ReturnType<typeof countSubtree>): string {
 }
 
 function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
-  const { collapsed, reorderMode, onToggle, onMenu, onMove, records, highlightId } = shared
+  const { collapsed, reorderMode, onToggle, onMenu, onMove, onCopy, records, highlightId } = shared
 
   const counts = countSubtree(node)
   const summary = collapsedSummary(counts)
@@ -111,11 +113,18 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
                 />
               </>
             ) : (
-              <IconButton
-                label={`${node.section.title} 메뉴`}
-                icon={<MoreVerticalIcon size={18} />}
-                onClick={() => onMenu(node)}
-              />
+              <>
+                <IconButton
+                  label={`${node.section.title} 복사`}
+                  icon={<CopyIcon size={18} />}
+                  onClick={() => onCopy(node)}
+                />
+                <IconButton
+                  label={`${node.section.title} 메뉴`}
+                  icon={<MoreVerticalIcon size={18} />}
+                  onClick={() => onMenu(node)}
+                />
+              </>
             )}
           </div>
         </div>
