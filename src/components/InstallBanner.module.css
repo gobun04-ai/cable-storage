@@ -1,11 +1,16 @@
+/*
+ * 강조색은 화면의 주요 액션(하단 [새 공사]) 하나에만 남긴다.
+ * 배너까지 강조색으로 두면 어느 쪽을 눌러야 하는지 흐려진다.
+ * 이 배너의 [설치] 버튼은 강조색을 쓰되 크기를 작게 두어 위계를 만든다.
+ */
 .banner {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
   margin-bottom: var(--sp-4);
   padding: var(--sp-3);
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--r-md);
   animation: appear var(--dur-base) var(--ease-out);
 }

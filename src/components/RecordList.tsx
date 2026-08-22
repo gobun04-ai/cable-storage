@@ -19,10 +19,12 @@ interface RecordListProps extends RecordHandlers {
   sectionId: Id
   cables: readonly CableRecord[]
   equipments: readonly EquipmentRecord[]
+  /** 방금 추가·복제되어 잠시 강조할 기록. 없으면 null. */
+  highlightId: Id | null
 }
 
 /** 항목 카드 안에 붙는 케이블·장비 목록과 추가 버튼 */
-export function RecordList({ sectionId, cables, equipments, ...handlers }: RecordListProps) {
+export function RecordList({ sectionId, cables, equipments, highlightId, ...handlers }: RecordListProps) {
   const replacements = equipments.filter((item) => item.kind === 'replace')
   const additions = equipments.filter((item) => item.kind === 'new')
 
@@ -35,6 +37,7 @@ export function RecordList({ sectionId, cables, equipments, ...handlers }: Recor
             <CableRow
               key={cable.id}
               cable={cable}
+              highlighted={cable.id === highlightId}
               onEdit={handlers.onEditCable}
               onMenu={handlers.onCableMenu}
             />
@@ -46,6 +49,7 @@ export function RecordList({ sectionId, cables, equipments, ...handlers }: Recor
         <EquipmentGroup
           label={`교체 장비 ${replacements.length}`}
           items={replacements}
+          highlightId={highlightId}
           onEdit={handlers.onEditEquipment}
           onMenu={handlers.onEquipmentMenu}
         />
@@ -55,6 +59,7 @@ export function RecordList({ sectionId, cables, equipments, ...handlers }: Recor
         <EquipmentGroup
           label={`신규 장비 ${additions.length}`}
           items={additions}
+          highlightId={highlightId}
           onEdit={handlers.onEditEquipment}
           onMenu={handlers.onEquipmentMenu}
         />
@@ -74,17 +79,19 @@ export function RecordList({ sectionId, cables, equipments, ...handlers }: Recor
 
 function CableRow({
   cable,
+  highlighted,
   onEdit,
   onMenu,
 }: {
   cable: CableRecord
+  highlighted: boolean
   onEdit: (cable: CableRecord) => void
   onMenu: (cable: CableRecord) => void
 }) {
   const hasRoute = cable.from !== '' || cable.to !== ''
 
   return (
-    <div className={styles.row}>
+    <div className={[styles.row, highlighted ? styles.rowHighlight : undefined].filter(Boolean).join(' ')}>
       <button type="button" className={styles.rowBody} onClick={() => onEdit(cable)}>
         <span className={styles.headline}>{cable.cableType}</span>
 
@@ -105,7 +112,6 @@ function CableRow({
 
       <div className={styles.rowMenu}>
         <IconButton
-          compact
           label={`${cable.cableType} 메뉴`}
           icon={<MoreVerticalIcon size={18} />}
           onClick={() => onMenu(cable)}
@@ -145,11 +151,13 @@ function QuantityText({ expression }: { expression: string }) {
 function EquipmentGroup({
   label,
   items,
+  highlightId,
   onEdit,
   onMenu,
 }: {
   label: string
   items: readonly EquipmentRecord[]
+  highlightId: Id | null
   onEdit: (equipment: EquipmentRecord) => void
   onMenu: (equipment: EquipmentRecord) => void
 }) {
@@ -157,7 +165,12 @@ function EquipmentGroup({
     <div className={styles.group}>
       <span className={styles.groupLabel}>{label}</span>
       {items.map((item) => (
-        <div key={item.id} className={styles.row}>
+        <div
+          key={item.id}
+          className={[styles.row, item.id === highlightId ? styles.rowHighlight : undefined]
+            .filter(Boolean)
+            .join(' ')}
+        >
           <button type="button" className={styles.rowBody} onClick={() => onEdit(item)}>
             <span className={styles.headline}>
               <span
@@ -175,7 +188,6 @@ function EquipmentGroup({
 
           <div className={styles.rowMenu}>
             <IconButton
-              compact
               label={`${item.name} 메뉴`}
               icon={<MoreVerticalIcon size={18} />}
               onClick={() => onMenu(item)}

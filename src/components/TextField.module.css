@@ -36,8 +36,10 @@
   opacity: 0.75;
 }
 
-.control:hover:not(:disabled) {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .control:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
 }
 
 .control:focus {

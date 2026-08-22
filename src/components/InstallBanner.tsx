@@ -72,7 +72,6 @@ export function InstallBanner() {
           설치
         </Button>
         <IconButton
-          compact
           label="설치 안내 닫기"
           icon={<CloseIcon size={18} />}
           onClick={() => {

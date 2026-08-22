@@ -17,13 +17,18 @@
     transform var(--dur-fast) var(--ease-out);
 }
 
-.card:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-1);
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-1);
+  }
 }
 
+/* 눌린 순간. 터치에서는 이것이 유일한 반응이므로 테두리까지 함께 바꾼다. */
 .card:active {
   transform: translateY(1px);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-1);
 }
 
 .cardLink {
@@ -74,21 +79,5 @@
   display: flex;
   align-items: center;
   padding-right: var(--sp-1);
-}
-
-/* 하단 고정 주요 액션 — 한 손으로 닿는 위치 */
-.bottomBar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: var(--z-sticky);
-  padding: var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, var(--bg) 60%, transparent);
-}
-
-.bottomBarInner {
-  max-width: 720px;
-  margin: 0 auto;
 }
 

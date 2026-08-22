@@ -78,6 +78,9 @@ function messageOf(error: unknown, fallback: string): string {
   return error instanceof StorageError ? error.userMessage : fallback
 }
 
+/** 방금 만든 기록을 강조하는 시간. RecordList.module.css 의 highlight 애니메이션과 맞춘다. */
+const HIGHLIGHT_MS = 1200
+
 export function ProjectScreen() {
   const { projectId = '' } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
@@ -99,6 +102,29 @@ export function ProjectScreen() {
 
   // 저장 실패로 되돌릴 때 쓸 직전 상태
   const lastSaved = useRef<Project | null>(null)
+
+  // 방금 추가·복제한 기록. 목록에서 그 줄을 찾을 수 있게 잠시 표시한다.
+  const [highlightId, setHighlightId] = useState<Id | null>(null)
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const highlight = useCallback((id: Id | null) => {
+    if (id === null) return
+
+    if (highlightTimer.current !== null) clearTimeout(highlightTimer.current)
+    setHighlightId(id)
+    // 표시가 남아 있으면 나중에 같은 줄을 고칠 때도 새로 만든 것처럼 보인다
+    highlightTimer.current = setTimeout(() => {
+      setHighlightId(null)
+      highlightTimer.current = null
+    }, HIGHLIGHT_MS)
+  }, [])
+
+  // 화면을 떠날 때 남은 타이머를 정리한다
+  useEffect(() => {
+    return () => {
+      if (highlightTimer.current !== null) clearTimeout(highlightTimer.current)
+    }
+  }, [])
 
   const reload = useCallback(async () => {
     setState({ status: 'loading' })
@@ -235,7 +261,12 @@ export function ProjectScreen() {
 
     if (cableForm.mode === 'add') {
       const sectionId = cableForm.sectionId
-      applyBody(project, (body) => addCable(body, sectionId, input), '케이블을 추가하지 못했습니다.')
+      const result = addCable(project.body, sectionId, input)
+      applyBody(project, () => result.body, '케이블을 추가하지 못했습니다.')
+
+      // 항목이 접혀 있으면 방금 적은 줄이 보이지 않는다
+      if (collapsed.has(sectionId)) toggle(sectionId)
+      highlight(result.cableId)
     } else {
       const cableId = cableForm.cable.id
       applyBody(project, (body) => updateCable(body, cableId, input), '케이블을 수정하지 못했습니다.')
@@ -260,7 +291,12 @@ export function ProjectScreen() {
 
     if (equipmentForm.mode === 'add') {
       const sectionId = equipmentForm.sectionId
-      applyBody(project, (body) => addEquipment(body, sectionId, input), '장비를 추가하지 못했습니다.')
+      const result = addEquipment(project.body, sectionId, input)
+      applyBody(project, () => result.body, '장비를 추가하지 못했습니다.')
+
+      // 항목이 접혀 있으면 방금 적은 줄이 보이지 않는다
+      if (collapsed.has(sectionId)) toggle(sectionId)
+      highlight(result.equipmentId)
     } else {
       const equipmentId = equipmentForm.equipment.id
       applyBody(project, (body) => updateEquipment(body, equipmentId, input), '장비를 수정하지 못했습니다.')
@@ -381,8 +417,11 @@ export function ProjectScreen() {
             label: '복제',
             description: '같은 규격을 다른 구간에 적을 때',
             icon: <CopyIcon />,
-            onClick: () =>
-              applyBody(project, (body) => duplicateCable(body, cableMenu.id), '복제하지 못했습니다.'),
+            onClick: () => {
+              const result = duplicateCable(project.body, cableMenu.id)
+              applyBody(project, () => result.body, '복제하지 못했습니다.')
+              highlight(result.cableId)
+            },
           },
           {
             key: 'up',
@@ -424,8 +463,11 @@ export function ProjectScreen() {
             key: 'duplicate',
             label: '복제',
             icon: <CopyIcon />,
-            onClick: () =>
-              applyBody(project, (body) => duplicateEquipment(body, equipmentMenu.id), '복제하지 못했습니다.'),
+            onClick: () => {
+              const result = duplicateEquipment(project.body, equipmentMenu.id)
+              applyBody(project, () => result.body, '복제하지 못했습니다.')
+              highlight(result.equipmentId)
+            },
           },
           {
             key: 'up',
@@ -591,6 +633,7 @@ export function ProjectScreen() {
                   onMenu={setMenuNode}
                   onMove={handleMoveSection}
                   records={recordHandlers}
+                  highlightId={highlightId}
                 />
               </>
             )}
@@ -599,8 +642,8 @@ export function ProjectScreen() {
       </main>
 
       {project && tree.length > 0 && (
-        <div className={styles.bottomBar}>
-          <div className={styles.bottomBarInner}>
+        <div className="bottom-bar">
+          <div className="bottom-bar-inner">
             <Button
               variant="primary"
               size="lg"

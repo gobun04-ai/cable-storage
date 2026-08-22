@@ -15,21 +15,19 @@
     color var(--dur-fast) var(--ease-out);
 }
 
-.iconButton:hover:not(:disabled) {
-  background: var(--surface-2);
-  color: var(--text);
+@media (hover: hover) {
+  .iconButton:hover:not(:disabled) {
+    background: var(--surface-2);
+    color: var(--text);
+  }
 }
 
 .iconButton:active:not(:disabled) {
   background: var(--border);
+  color: var(--text);
 }
 
 .iconButton:disabled {
   cursor: not-allowed;
   opacity: 0.35;
-}
-
-.compact {
-  min-width: 40px;
-  min-height: 40px;
 }

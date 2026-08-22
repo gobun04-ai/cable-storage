@@ -40,8 +40,39 @@
   transition: background-color var(--dur-fast) var(--ease-out);
 }
 
-.rowBody:hover {
-  background: var(--surface);
+@media (hover: hover) {
+  .rowBody:hover {
+    background: var(--surface);
+  }
+}
+
+/* 눌린 순간. 터치에는 hover 가 없어 이것이 유일한 반응이므로 반드시 둔다. */
+.rowBody:active {
+  background: var(--surface-2);
+}
+
+/*
+ * 방금 추가하거나 복제한 기록.
+ * 시트가 닫히고 나면 새 줄이 목록 어디에 들어갔는지 찾기 어려워 잠시 배경을 밝힌다.
+ */
+.rowHighlight {
+  animation: highlight 1200ms var(--ease-out);
+}
+
+@keyframes highlight {
+  from {
+    background: var(--accent-soft);
+  }
+  to {
+    background: transparent;
+  }
+}
+
+/* 모션을 줄이도록 설정한 경우에도 어느 줄인지는 알려 준다. 움직임 대신 정지된 배경으로 */
+@media (prefers-reduced-motion: reduce) {
+  .rowHighlight {
+    background: var(--accent-soft);
+  }
 }
 
 .headline {
@@ -65,8 +96,9 @@
   word-break: break-word;
 }
 
+/* From 과 To 를 잇는 유일한 기호다. 테두리색으로 두면 흐려서 두 지명이 붙어 보인다. */
 .arrow {
-  color: var(--border-strong);
+  color: var(--text-muted);
 }
 
 .quantity {

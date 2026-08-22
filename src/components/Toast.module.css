@@ -12,10 +12,11 @@
 }
 
 .toast {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-left: 4px solid var(--text-muted);
@@ -25,6 +26,11 @@
   font-size: var(--fs-sm);
   pointer-events: auto;
   animation: slideUp var(--dur-base) var(--ease-out);
+}
+
+/* 사라지는 것도 보여 준다. 뚝 없어지면 무슨 일이 있었는지 눈이 따라가지 못한다. */
+.leaving {
+  animation: slideOut var(--dur-base) var(--ease-out) forwards;
 }
 
 .message {
@@ -50,12 +56,16 @@
   color: var(--danger);
 }
 
+/*
+ * 되돌리기 버튼. 놓치면 되살릴 방법이 없으므로 터치 영역을 44px 로 두고
+ * 테두리도 강조색으로 둔다.
+ */
 .action {
   flex: 0 0 auto;
-  min-height: 36px;
+  min-height: var(--tap-min);
   padding: 0 var(--sp-3);
   background: transparent;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--accent);
   border-radius: var(--r-sm);
   color: var(--accent);
   font-size: var(--fs-sm);
@@ -65,18 +75,13 @@
     border-color var(--dur-fast) var(--ease-out);
 }
 
-.action:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-}
-
 .close {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: var(--tap-min);
+  height: var(--tap-min);
   background: transparent;
   border: none;
   border-radius: var(--r-sm);
@@ -84,9 +89,48 @@
   transition: background-color var(--dur-fast) var(--ease-out);
 }
 
-.close:hover {
+@media (hover: hover) {
+  .action:hover {
+    background: var(--accent-soft);
+  }
+
+  .close:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+}
+
+.action:active {
+  background: var(--accent-soft);
+}
+
+.close:active {
   background: var(--border);
   color: var(--text);
+}
+
+/*
+ * 남은 시간 막대. 되돌리기가 붙은 알림에만 붙여
+ * "지금 누르면 되돌릴 수 있다"와 "곧 사라진다"를 함께 알린다.
+ */
+.timebar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--accent);
+  /* 토스트에 overflow:hidden 을 걸면 안쪽 버튼의 포커스 링이 잘리므로 모서리는 여기에서 맞춘다 */
+  border-bottom-left-radius: var(--r-md);
+  transform-origin: left center;
+  animation: drain linear forwards;
+}
+
+/* 모션을 줄이도록 설정했으면 줄어드는 막대는 보여 주지 않는다 */
+@media (prefers-reduced-motion: reduce) {
+  .timebar {
+    display: none;
+  }
 }
 
 @keyframes slideUp {
@@ -97,5 +141,25 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
   }
 }

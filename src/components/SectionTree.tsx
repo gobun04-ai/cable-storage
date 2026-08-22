@@ -1,4 +1,4 @@
-import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, ChevronRightIcon, MoreVerticalIcon } from './Icons'
+import { ArrowDownIcon, ArrowUpIcon, ChevronRightIcon, MoreVerticalIcon } from './Icons'
 import { IconButton } from './IconButton'
 import { RecordList, type RecordHandlers } from './RecordList'
 import { countSubtree } from '../lib/tree'
@@ -14,6 +14,8 @@ interface SectionTreeProps {
   onMenu: (node: SectionNode) => void
   onMove: (id: Id, direction: -1 | 1) => void
   records: RecordHandlers
+  /** 방금 추가·복제되어 잠시 강조할 기록. 없으면 null. */
+  highlightId: Id | null
 }
 
 export function SectionTree(props: SectionTreeProps) {
@@ -41,7 +43,7 @@ interface NodeViewProps extends SectionTreeProps {
 }
 
 function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
-  const { collapsed, reorderMode, onToggle, onMenu, onMove, records } = shared
+  const { collapsed, reorderMode, onToggle, onMenu, onMove, records, highlightId } = shared
 
   const counts = countSubtree(node)
   const hasChildren = node.children.length > 0
@@ -56,13 +58,14 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
         <div className={styles.row}>
           <button
             type="button"
-            className={styles.twisty}
+            className={[styles.twisty, expanded ? styles.twistyExpanded : undefined].filter(Boolean).join(' ')}
             disabled={!canCollapse}
             aria-expanded={canCollapse ? expanded : undefined}
             aria-label={canCollapse ? (expanded ? '내용 접기' : '내용 펼치기') : '접을 내용 없음'}
             onClick={() => onToggle(node.section.id)}
           >
-            {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+            {/* 펼쳐지면 CSS 가 90도 돌려 아래를 가리키게 한다 */}
+            <ChevronRightIcon />
           </button>
 
           <button
@@ -91,14 +94,12 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
             {reorderMode ? (
               <>
                 <IconButton
-                  compact
                   label={`${node.section.title} 위로`}
                   icon={<ArrowUpIcon size={18} />}
                   disabled={isFirst}
                   onClick={() => onMove(node.section.id, -1)}
                 />
                 <IconButton
-                  compact
                   label={`${node.section.title} 아래로`}
                   icon={<ArrowDownIcon size={18} />}
                   disabled={isLast}
@@ -107,7 +108,6 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
               </>
             ) : (
               <IconButton
-                compact
                 label={`${node.section.title} 메뉴`}
                 icon={<MoreVerticalIcon size={18} />}
                 onClick={() => onMenu(node)}
@@ -122,6 +122,7 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
             sectionId={node.section.id}
             cables={node.cables}
             equipments={node.equipments}
+            highlightId={highlightId}
             {...records}
           />
         )}

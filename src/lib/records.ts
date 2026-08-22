@@ -6,6 +6,13 @@ import { newId } from './id'
 export type CableInput = Omit<CableRecord, 'id' | 'sectionId' | 'order'>
 export type EquipmentInput = Omit<EquipmentRecord, 'id' | 'sectionId' | 'order'>
 
+/*
+ * 기록을 새로 만드는 함수는 본문과 함께 방금 만든 것의 식별자를 돌려준다.
+ * 화면이 그 줄을 찾아 잠시 표시해 주기 위해서다 (addSection 과 같은 방식).
+ * 복제는 원본을 찾지 못하면 아무것도 만들지 않으므로 식별자가 null 이 될 수 있다.
+ */
+
+
 function nextOrder(rows: readonly { sectionId: Id; order: number }[], sectionId: Id): number {
   let max = -1
   for (const row of rows) {
@@ -54,14 +61,21 @@ function move<T extends { id: Id; sectionId: Id; order: number }>(
 
 // ---------- 케이블 ----------
 
-export function addCable(body: ProjectBody, sectionId: Id, input: CableInput): ProjectBody {
+export function addCable(
+  body: ProjectBody,
+  sectionId: Id,
+  input: CableInput,
+): { body: ProjectBody; cableId: Id } {
   const cable: CableRecord = {
     ...input,
     id: newId(),
     sectionId,
     order: nextOrder(body.cables, sectionId),
   }
-  return { ...body, cables: [...body.cables, cable] }
+  return {
+    body: { ...body, cables: [...body.cables, cable] },
+    cableId: cable.id,
+  }
 }
 
 export function updateCable(body: ProjectBody, cableId: Id, input: CableInput): ProjectBody {
@@ -80,12 +94,15 @@ export function removeCable(body: ProjectBody, cableId: Id): ProjectBody {
 }
 
 /** 같은 규격을 여러 구간에 적을 때 쓴다. 바로 아래에 사본을 넣는다. */
-export function duplicateCable(body: ProjectBody, cableId: Id): ProjectBody {
+export function duplicateCable(body: ProjectBody, cableId: Id): { body: ProjectBody; cableId: Id | null } {
   const target = body.cables.find((cable) => cable.id === cableId)
-  if (!target) return body
+  if (!target) return { body, cableId: null }
 
   const copy: CableRecord = { ...target, id: newId(), order: target.order + 0.5 }
-  return { ...body, cables: renumber([...body.cables, copy], target.sectionId) }
+  return {
+    body: { ...body, cables: renumber([...body.cables, copy], target.sectionId) },
+    cableId: copy.id,
+  }
 }
 
 export function moveCable(body: ProjectBody, cableId: Id, direction: -1 | 1): ProjectBody {
@@ -95,14 +112,21 @@ export function moveCable(body: ProjectBody, cableId: Id, direction: -1 | 1): Pr
 
 // ---------- 장비 ----------
 
-export function addEquipment(body: ProjectBody, sectionId: Id, input: EquipmentInput): ProjectBody {
+export function addEquipment(
+  body: ProjectBody,
+  sectionId: Id,
+  input: EquipmentInput,
+): { body: ProjectBody; equipmentId: Id } {
   const equipment: EquipmentRecord = {
     ...input,
     id: newId(),
     sectionId,
     order: nextOrder(body.equipments, sectionId),
   }
-  return { ...body, equipments: [...body.equipments, equipment] }
+  return {
+    body: { ...body, equipments: [...body.equipments, equipment] },
+    equipmentId: equipment.id,
+  }
 }
 
 export function updateEquipment(body: ProjectBody, equipmentId: Id, input: EquipmentInput): ProjectBody {
@@ -120,12 +144,18 @@ export function removeEquipment(body: ProjectBody, equipmentId: Id): ProjectBody
   return { ...body, equipments: renumber(remaining, target.sectionId) }
 }
 
-export function duplicateEquipment(body: ProjectBody, equipmentId: Id): ProjectBody {
+export function duplicateEquipment(
+  body: ProjectBody,
+  equipmentId: Id,
+): { body: ProjectBody; equipmentId: Id | null } {
   const target = body.equipments.find((item) => item.id === equipmentId)
-  if (!target) return body
+  if (!target) return { body, equipmentId: null }
 
   const copy: EquipmentRecord = { ...target, id: newId(), order: target.order + 0.5 }
-  return { ...body, equipments: renumber([...body.equipments, copy], target.sectionId) }
+  return {
+    body: { ...body, equipments: renumber([...body.equipments, copy], target.sectionId) },
+    equipmentId: copy.id,
+  }
 }
 
 export function moveEquipment(body: ProjectBody, equipmentId: Id, direction: -1 | 1): ProjectBody {

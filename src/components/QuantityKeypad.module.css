@@ -71,16 +71,6 @@
     transform var(--dur-fast) var(--ease-out);
 }
 
-.key:hover {
-  background: var(--surface-2);
-  border-color: var(--border-strong);
-}
-
-.key:active {
-  transform: translateY(1px);
-  background: var(--border);
-}
-
 /* 연산자·괄호는 숫자와 구분되게 */
 .operator {
   background: var(--surface-2);
@@ -88,19 +78,9 @@
   font-weight: var(--fw-bold);
 }
 
-.operator:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-}
-
 .danger {
   color: var(--danger);
   font-size: var(--fs-md);
-}
-
-.danger:hover {
-  background: var(--danger-soft);
-  border-color: var(--danger);
 }
 
 .done {
@@ -111,9 +91,51 @@
   font-weight: var(--fw-bold);
 }
 
-.done:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+@media (hover: hover) {
+  .key:hover {
+    background: var(--surface-2);
+    border-color: var(--border-strong);
+  }
+
+  .operator:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  .danger:hover {
+    background: var(--danger-soft);
+    border-color: var(--danger);
+  }
+
+  .done:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+}
+
+/*
+ * 눌린 순간. 연타할 때 한 번 한 번이 들어갔는지 보여야 하므로
+ * 배경을 확실히 바꾸고, hover 뒤에 두어 마우스에서도 눌림이 이기게 한다.
+ */
+.key:active {
+  transform: translateY(1px);
+  background: var(--border);
+  border-color: var(--border-strong);
+}
+
+.operator:active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.danger:active {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+
+.done:active {
+  background: var(--accent-active);
+  border-color: var(--accent-active);
 }
 
 @keyframes reveal {

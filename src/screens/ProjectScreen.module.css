@@ -48,17 +48,3 @@
   word-break: break-word;
 }
 
-.bottomBar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: var(--z-sticky);
-  padding: var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, var(--bg) 60%, transparent);
-}
-
-.bottomBarInner {
-  max-width: 720px;
-  margin: 0 auto;
-}

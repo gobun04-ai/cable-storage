@@ -20,14 +20,6 @@
   transition: background-color var(--dur-fast) var(--ease-out);
 }
 
-.item:hover:not(:disabled) {
-  background: var(--surface-2);
-}
-
-.item:active:not(:disabled) {
-  background: var(--border);
-}
-
 .item:disabled {
   color: var(--text-muted);
   cursor: not-allowed;
@@ -38,7 +30,22 @@
   color: var(--danger);
 }
 
-.danger:hover:not(:disabled) {
+@media (hover: hover) {
+  .item:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
+
+  .danger:hover:not(:disabled) {
+    background: var(--danger-soft);
+  }
+}
+
+/* 눌린 순간. hover 뒤에 두어 마우스로 누를 때도 눌림이 hover 를 이기게 한다. */
+.item:active:not(:disabled) {
+  background: var(--border);
+}
+
+.danger:active:not(:disabled) {
   background: var(--danger-soft);
 }
 

@@ -33,9 +33,9 @@ function equipmentInput(overrides: Partial<EquipmentInput> = {}): EquipmentInput
 /** s1 에 케이블 3건이 순서대로 들어 있는 본문 */
 function threeCables(): ProjectBody {
   let body = EMPTY
-  body = addCable(body, 's1', cableInput({ cableType: 'A' }))
-  body = addCable(body, 's1', cableInput({ cableType: 'B' }))
-  body = addCable(body, 's1', cableInput({ cableType: 'C' }))
+  body = addCable(body, 's1', cableInput({ cableType: 'A' })).body
+  body = addCable(body, 's1', cableInput({ cableType: 'B' })).body
+  body = addCable(body, 's1', cableInput({ cableType: 'C' })).body
   return body
 }
 
@@ -49,8 +49,8 @@ describe('addCable', () => {
   })
 
   it('항목마다 순서를 따로 센다', () => {
-    let body = addCable(EMPTY, 's1', cableInput())
-    body = addCable(body, 's2', cableInput())
+    let body = addCable(EMPTY, 's1', cableInput()).body
+    body = addCable(body, 's2', cableInput()).body
 
     expect(body.cables.map((c) => [c.sectionId, c.order])).toEqual([
       ['s1', 0],
@@ -63,6 +63,13 @@ describe('addCable', () => {
     const ids = new Set(body.cables.map((c) => c.id))
 
     expect(ids.size).toBe(3)
+  })
+
+  it('방금 추가한 기록의 식별자를 함께 돌려준다', () => {
+    const result = addCable(EMPTY, 's1', cableInput({ cableType: '새 케이블' }))
+    const added = result.body.cables.find((c) => c.id === result.cableId)
+
+    expect(added?.cableType).toBe('새 케이블')
   })
 
   it('원본 본문을 바꾸지 않는다', () => {
@@ -110,7 +117,7 @@ describe('removeCable', () => {
 describe('duplicateCable', () => {
   it('원본 바로 아래에 사본을 넣는다', () => {
     const body = threeCables()
-    const next = duplicateCable(body, body.cables[0]!.id)
+    const next = duplicateCable(body, body.cables[0]!.id).body
 
     expect(typesOf(next)).toEqual(['A', 'A', 'B', 'C'])
   })
@@ -118,14 +125,33 @@ describe('duplicateCable', () => {
   it('사본에 새 식별자를 준다', () => {
     const body = threeCables()
     const sourceId = body.cables[0]!.id
-    const next = duplicateCable(body, sourceId)
+    const next = duplicateCable(body, sourceId).body
 
     expect(next.cables.filter((c) => c.id === sourceId)).toHaveLength(1)
   })
 
-  it('사본의 순서도 정수로 정리된다', () => {
-    const body = duplicateCable(threeCables(), threeCables().cables[0]!.id)
+  it('만들어 낸 사본의 식별자를 돌려준다', () => {
+    const body = threeCables()
+    const result = duplicateCable(body, body.cables[0]!.id)
+    const copy = result.body.cables.find((c) => c.id === result.cableId)
 
+    expect(copy?.cableType).toBe('A')
+  })
+
+  it('없는 기록을 복제하려 하면 본문을 그대로 두고 식별자는 비운다', () => {
+    const body = threeCables()
+    const result = duplicateCable(body, 'nope')
+
+    expect(result.body).toBe(body)
+    expect(result.cableId).toBeNull()
+  })
+
+  it('사본의 순서도 정수로 정리된다', () => {
+    // 사본은 order + 0.5 로 끼어든 뒤 renumber 로 정리된다. 같은 본문에서 뽑아야 실제로 복제된다.
+    const source = threeCables()
+    const body = duplicateCable(source, source.cables[0]!.id).body
+
+    expect(body.cables).toHaveLength(4)
     expect(body.cables.every((c) => Number.isInteger(c.order))).toBe(true)
   })
 })
@@ -156,18 +182,16 @@ describe('moveCable', () => {
   })
 
   it('다른 항목의 기록과 섞이지 않는다', () => {
-    let body = threeCables()
-    body = addCable(body, 's2', cableInput({ cableType: 'Z' }))
-    const zId = body.cables[body.cables.length - 1]!.id
+    const added = addCable(threeCables(), 's2', cableInput({ cableType: 'Z' }))
 
-    expect(moveCable(body, zId, -1)).toBe(body)
+    expect(moveCable(added.body, added.cableId, -1)).toBe(added.body)
   })
 })
 
 describe('장비 기록', () => {
   it('교체와 신규를 구분해 담는다', () => {
-    let body = addEquipment(EMPTY, 's1', equipmentInput({ kind: 'replace', name: '차단기' }))
-    body = addEquipment(body, 's1', equipmentInput({ kind: 'new', name: '계전기' }))
+    let body = addEquipment(EMPTY, 's1', equipmentInput({ kind: 'replace', name: '차단기' })).body
+    body = addEquipment(body, 's1', equipmentInput({ kind: 'new', name: '계전기' })).body
 
     expect(body.equipments.map((e) => [e.kind, e.name])).toEqual([
       ['replace', '차단기'],
@@ -175,17 +199,24 @@ describe('장비 기록', () => {
     ])
   })
 
+  it('방금 추가한 장비의 식별자를 함께 돌려준다', () => {
+    const result = addEquipment(EMPTY, 's1', equipmentInput({ name: '새 장비' }))
+    const added = result.body.equipments.find((e) => e.id === result.equipmentId)
+
+    expect(added?.name).toBe('새 장비')
+  })
+
   it('지운 뒤 순서를 다시 매긴다', () => {
-    let body = addEquipment(EMPTY, 's1', equipmentInput({ name: 'A' }))
-    body = addEquipment(body, 's1', equipmentInput({ name: 'B' }))
+    let body = addEquipment(EMPTY, 's1', equipmentInput({ name: 'A' })).body
+    body = addEquipment(body, 's1', equipmentInput({ name: 'B' })).body
     const next = removeEquipment(body, body.equipments[0]!.id)
 
     expect(next.equipments.map((e) => [e.name, e.order])).toEqual([['B', 0]])
   })
 
   it('순서를 바꾼다', () => {
-    let body = addEquipment(EMPTY, 's1', equipmentInput({ name: 'A' }))
-    body = addEquipment(body, 's1', equipmentInput({ name: 'B' }))
+    let body = addEquipment(EMPTY, 's1', equipmentInput({ name: 'A' })).body
+    body = addEquipment(body, 's1', equipmentInput({ name: 'B' })).body
     const next = moveEquipment(body, body.equipments[1]!.id, -1)
     const names = [...next.equipments].sort((a, b) => a.order - b.order).map((e) => e.name)
 

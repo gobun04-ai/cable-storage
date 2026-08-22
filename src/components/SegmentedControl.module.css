@@ -20,7 +20,7 @@
 
 .segment {
   flex: 1 1 0;
-  min-height: 40px;
+  min-height: var(--tap-min);
   padding: 0 var(--sp-2);
   background: transparent;
   border: 1px solid transparent;
@@ -34,8 +34,15 @@
     border-color var(--dur-fast) var(--ease-out);
 }
 
-.segment:hover:not(.selected) {
-  background: var(--bg);
+@media (hover: hover) {
+  .segment:hover:not(.selected) {
+    background: var(--bg);
+    color: var(--text);
+  }
+}
+
+.segment:active:not(.selected) {
+  background: var(--border);
   color: var(--text);
 }
 

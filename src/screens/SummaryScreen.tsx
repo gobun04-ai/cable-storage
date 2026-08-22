@@ -248,8 +248,8 @@ export function SummaryScreen() {
       </main>
 
       {project && hasRecords && (
-        <div className={styles.bottomBar}>
-          <div className={styles.bottomBarInner}>
+        <div className="bottom-bar">
+          <div className="bottom-bar-inner">
             <Button variant="primary" size="lg" fullWidth loading={sharing} onClick={() => void handleShare()}>
               공유하기
             </Button>

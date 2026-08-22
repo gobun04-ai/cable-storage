@@ -61,11 +61,14 @@ svg {
 }
 
 /* ---------- 포커스 ---------- */
-/* 포커스 링은 제거하지 않는다. 키보드 조작 시에만 보이도록 다듬는다. */
+/*
+ * 포커스 링은 제거하지 않는다. 키보드 조작 시에만 보이도록 다듬는다.
+ * outline 은 요소의 border-radius 를 따라 그려지므로 여기에서 radius 를 지정하지 않는다.
+ * 지정하면 알약 모양 칩 같은 요소의 실제 모서리까지 덮어써 각지게 만든다.
+ */
 :focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: var(--r-sm);
 }
 
 /* ---------- 접근성 유틸 ---------- */
@@ -113,6 +116,39 @@ svg {
   max-width: 720px;
   margin: 0 auto;
   padding: var(--sp-4);
-  /* 화면 하단 고정 버튼에 콘텐츠가 가리지 않도록 */
-  padding-bottom: calc(var(--sp-7) + var(--sp-5));
+  /*
+   * 화면 하단 고정 버튼에 콘텐츠가 가리지 않도록 바 높이만큼 비우고 여유를 더 둔다.
+   * 바와 같은 토큰을 쓰므로 버튼 크기를 바꿔도 둘이 어긋나지 않는다.
+   */
+  padding-bottom: calc(var(--bottom-bar-h) + var(--sp-5));
+}
+
+/* ---------- 하단 고정 액션 바 ---------- */
+/* 한 손으로 닿는 위치에 화면의 주요 액션 하나를 둔다. 목록·공사·정리 세 화면이 함께 쓴다. */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-sticky);
+  padding: var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom));
+  /* 바 자체는 불투명하게 둔다. 반투명이면 글자가 겹쳐 읽히지 않는다. */
+  background: var(--bg);
+}
+
+/* 바 위에 짧은 페이드를 얹어 스크롤 콘텐츠가 뚝 잘린 느낌 없이 이어지게 한다 */
+.bottom-bar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: var(--sp-4);
+  background: linear-gradient(to top, var(--bg), transparent);
+  pointer-events: none;
+}
+
+.bottom-bar-inner {
+  max-width: 720px;
+  margin: 0 auto;
 }

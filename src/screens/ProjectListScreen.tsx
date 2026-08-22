@@ -260,8 +260,8 @@ export function ProjectListScreen() {
       </main>
 
       {state.status === 'ready' && state.projects.length > 0 && (
-        <div className={styles.bottomBar}>
-          <div className={styles.bottomBarInner}>
+        <div className="bottom-bar">
+          <div className="bottom-bar-inner">
             <Button variant="primary" size="lg" fullWidth icon={<PlusIcon />} onClick={openCreate}>
               새 공사
             </Button>
