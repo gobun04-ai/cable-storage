@@ -15,8 +15,8 @@ import { fileURLToPath } from 'node:url'
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public')
 
-// 앱 강조색과 같은 파랑. 밝은 배경·어두운 배경 어디에 놓여도 눈에 띈다.
-const BACKGROUND = [15, 73, 168]
+// 앱 강조색(--accent #4f46e5)과 같은 인디고. 홈 화면 아이콘과 앱 색이 어긋나지 않게 맞춘다.
+const BACKGROUND = [79, 70, 229]
 const FOREGROUND = [255, 255, 255]
 
 // ---------- PNG 인코딩 ----------

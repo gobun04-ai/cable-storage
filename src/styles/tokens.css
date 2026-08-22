@@ -67,59 +67,63 @@
    * 세 층으로 나눈다. 층이 다르면 밝기가 다르므로 테두리를 진하게 긋지 않아도 경계가 보인다.
    *   bg        페이지 바탕 — 가장 뒤
    *   surface   그 위에 얹히는 면 — 카드, 앱바, 시트, 버튼
-   *   surface-2 그보다 안으로 들어간 면 — 눌린 상태, 칩, 트랙, 코드 블록
+   *   surface-2 그보다 안으로 들어간 면 — 칩, 트랙, 코드 블록, hover
    * 라이트도 바탕을 살짝 회색으로 두어 흰 카드가 떠 보이게 한다.
+   *
+   * 회색에는 강조색과 같은 쪽으로 아주 옅은 푸른기를 준다.
+   * 완전한 무채색은 인디고 옆에서 탁해 보이고, 푸른기가 세면 회색이 색으로 읽힌다.
    */
-  --bg: light-dark(#f1f4f7, #14171a);
-  --surface: light-dark(#ffffff, #1d2126);
-  --surface-2: light-dark(#e8edf2, #262c33);
+  --bg: light-dark(#f8fafc, #0f172a);
+  --surface: light-dark(#ffffff, #1e293b);
+  --surface-2: light-dark(#f1f5f9, #334155);
 
   /*
    * 눌린 순간의 바탕. surface-2 보다 한 단계 더 들어간다.
    * 다크에서는 반대로 밝아진다 — 어두운 화면에서는 밝아지는 쪽이 눌림으로 읽힌다.
    */
-  --pressed: light-dark(#dbe2ea, #333b45);
+  --pressed: light-dark(#e2e8f0, #415068);
 
   /* 층 사이 밝기 차이가 경계를 만드므로 테두리는 거들기만 한다 */
-  --border: light-dark(#e2e8ef, #2f363e);
-  /* 입력칸·버튼처럼 조작하는 요소의 경계. WCAG 1.4.11 을 지켜 3:1 이상 (3.42 / 3.35) */
-  --border-strong: light-dark(#818c99, #68737f);
+  --border: light-dark(#e6ebf1, #2c3a4e);
+  /* 입력칸·버튼처럼 조작하는 요소의 경계. WCAG 1.4.11 을 지켜 3:1 이상 (3.43 / 4.29) */
+  --border-strong: light-dark(#7a8ca6, #7d8ca3);
 
-  --text: light-dark(#16191d, #e9ecef); /* 17.6 / 15.2 */
-  --text-muted: light-dark(#5b6470, #a3adb8); /* 6.0 / 7.9 */
+  --text: light-dark(#0f172a, #f1f5f9); /* 17.9 / 13.4 */
+  --text-muted: light-dark(#5c6b80, #a7b4c4); /* 5.4 / 6.9 */
   /* 다크의 accent 는 밝아서 흰 글자가 얹히지 않는다. 어두운 글자를 쓴다 */
-  --text-on-accent: light-dark(#ffffff, #0b1220); /* 6.5 / 7.8 */
+  --text-on-accent: light-dark(#ffffff, #14163a); /* 6.3 / 8.7 */
 
-  --accent: light-dark(#1257c7, #6fa8ff); /* 6.5 / 7.5 */
-  --accent-hover: light-dark(#0f49a8, #8ab9ff);
-  --accent-active: light-dark(#0d3d8f, #a5caff);
-  --accent-soft: light-dark(#e8f0fd, #1b2c47);
+  /* 강조색은 인디고. 같은 밝기의 파랑보다 덜 딱딱하다. */
+  --accent: light-dark(#4f46e5, #a5b4fc); /* 6.3 / 7.3 */
+  --accent-hover: light-dark(#4338ca, #c7d2fe);
+  --accent-active: light-dark(#3730a3, #e0e7ff);
+  --accent-soft: light-dark(#eef2ff, #2c2f63);
 
-  --danger: light-dark(#c0271f, #ff8a80); /* 5.9 / 7.9 */
-  --danger-hover: light-dark(#a11f18, #ffa39b);
-  --danger-active: light-dark(#85180f, #ffbcb5);
-  --danger-soft: light-dark(#fdecea, #3a1f1c);
-  /* 밝은 산호색 위에 흰 글씨를 얹으면 대비가 2.3:1 밖에 안 되므로 어두운 글자를 쓴다 */
-  --text-on-danger: light-dark(#ffffff, #2a1210); /* 5.9 / 7.7 */
+  --danger: light-dark(#c81e1e, #fca5a5); /* 5.7 / 7.7 */
+  --danger-hover: light-dark(#a91717, #fecaca);
+  --danger-active: light-dark(#8f1212, #fee2e2);
+  --danger-soft: light-dark(#fee2e2, #3f1618);
+  /* 다크의 danger 는 밝은 살구색이라 흰 글자가 얹히지 않는다 */
+  --text-on-danger: light-dark(#ffffff, #2a0f0f); /* 5.7 / 9.4 */
 
-  --success: light-dark(#1b7a3e, #6fd694);
-  --success-soft: light-dark(#e7f5ec, #16301f);
-  --warn: light-dark(#96601b, #e5b567);
-  --warn-soft: light-dark(#fdf1de, #33280f);
+  --success: light-dark(#047857, #34d399);
+  --success-soft: light-dark(#d1fae5, #06301f);
+  --warn: light-dark(#b45309, #fbbf24);
+  --warn-soft: light-dark(#fef3c7, #3d2c06);
 
-  --focus-ring: light-dark(#1257c7, #8ab9ff);
-  --overlay: light-dark(rgba(16, 20, 26, 0.5), rgba(0, 0, 0, 0.6));
+  --focus-ring: light-dark(#4f46e5, #a5b4fc);
+  --overlay: light-dark(rgba(15, 23, 42, 0.5), rgba(0, 0, 0, 0.6));
 
   /*
    * 그림자. 오프셋과 흐림은 두 모드가 같고 색만 달라진다.
    * 다크에서는 두 번째 레이어를 투명하게 두어 한 겹으로 떨어뜨린다 —
    * 어두운 배경에서는 그림자보다 표면 밝기 차이가 깊이를 만든다.
    */
-  --shadow-1: 0 1px 2px light-dark(rgba(16, 20, 26, 0.08), rgba(0, 0, 0, 0.4)),
-    0 1px 3px light-dark(rgba(16, 20, 26, 0.06), transparent);
-  --shadow-2: 0 4px 12px light-dark(rgba(16, 20, 26, 0.12), rgba(0, 0, 0, 0.5)),
-    0 2px 4px light-dark(rgba(16, 20, 26, 0.08), transparent);
-  --shadow-3: 0 12px 32px light-dark(rgba(16, 20, 26, 0.18), rgba(0, 0, 0, 0.6));
+  --shadow-1: 0 1px 2px light-dark(rgba(15, 23, 42, 0.07), rgba(0, 0, 0, 0.4)),
+    0 1px 3px light-dark(rgba(15, 23, 42, 0.05), transparent);
+  --shadow-2: 0 4px 12px light-dark(rgba(15, 23, 42, 0.1), rgba(0, 0, 0, 0.5)),
+    0 2px 4px light-dark(rgba(15, 23, 42, 0.06), transparent);
+  --shadow-3: 0 12px 32px light-dark(rgba(15, 23, 42, 0.16), rgba(0, 0, 0, 0.6));
 
   /* ---- 글꼴 ---- */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR',

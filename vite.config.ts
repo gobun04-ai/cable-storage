@@ -26,8 +26,9 @@ export default defineConfig({
         scope: base,
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#ffffff',
-        theme_color: '#0f49a8',
+        // 설치 후 스플래시 화면 색. 앱의 바탕(--bg)·강조색(--accent)과 맞춘다.
+        background_color: '#f8fafc',
+        theme_color: '#4f46e5',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

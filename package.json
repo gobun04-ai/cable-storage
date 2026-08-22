@@ -1,6 +1,6 @@
 {
   "name": "cable-note",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "현장 공사 케이블 물량 산출 노트 (PWA)",
