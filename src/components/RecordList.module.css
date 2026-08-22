@@ -12,6 +12,9 @@
 
 /* 좌측 padding 은 아래 .rowBody 와 같아야 한다. 어긋나면 라벨과 목록의 정렬선이 흐트러진다. */
 .groupLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
   padding: var(--sp-3) var(--sp-3) var(--sp-1);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);

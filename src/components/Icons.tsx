@@ -113,6 +113,24 @@ export const ShareIcon = (p: IconProps) => (
   </Svg>
 )
 
+/* 케이블 — 두 지점을 잇는 한 가닥. 작은 크기에서도 알아볼 수 있게 끝점을 점으로 찍는다. */
+export const CableIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="5" cy="6" r="2" fill="currentColor" stroke="none" />
+    <circle cx="19" cy="16" r="2" fill="currentColor" stroke="none" />
+    <path d="M5 8v3a5 5 0 0 0 5 5h7" />
+  </Svg>
+)
+
+/* 장비 — 배전반·차단기함을 본뜬 상자 */
+export const EquipmentIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="4" y="4" width="16" height="16" rx="2" />
+    <path d="M4 10h16" />
+    <path d="M8 15h3" />
+  </Svg>
+)
+
 export const AlertIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M12 9v4M12 17h.01" />

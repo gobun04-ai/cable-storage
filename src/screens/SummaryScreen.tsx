@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { Button } from '../components/Button'
-import { AlertIcon, CopyIcon, FolderIcon } from '../components/Icons'
+import { AlertIcon, CableIcon, CopyIcon, EquipmentIcon, FolderIcon } from '../components/Icons'
 import { EmptyState, ErrorState, ListSkeleton } from '../components/States'
 import { loadProject, StorageError } from '../lib/db'
 import { buildShareText } from '../lib/exportText'
@@ -144,7 +144,10 @@ export function SummaryScreen() {
           <div className={styles.stack}>
             <div className={styles.headline}>
               <div className={styles.headlineCard}>
-                <span className={styles.headlineLabel}>케이블 총 물량</span>
+                <span className={styles.headlineLabel}>
+                  <CableIcon size={14} />
+                  케이블 총 물량
+                </span>
                 <span className={styles.headlineValue}>
                   {formatNumber(summary.totalCableLength)}
                   <span className={styles.headlineUnit}> m</span>
@@ -155,7 +158,10 @@ export function SummaryScreen() {
               </div>
 
               <div className={styles.headlineCard}>
-                <span className={styles.headlineLabel}>장비</span>
+                <span className={styles.headlineLabel}>
+                  <EquipmentIcon size={14} />
+                  장비
+                </span>
                 <span className={styles.headlineValue}>
                   {summary.totalReplacementQty + summary.totalAdditionQty}
                   <span className={styles.headlineUnit}> 개</span>

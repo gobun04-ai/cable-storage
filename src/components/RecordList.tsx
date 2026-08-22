@@ -2,7 +2,7 @@ import { evaluateQuantity } from '../lib/expr'
 import { formatNumber } from '../lib/format'
 import type { CableRecord, EquipmentRecord, Id } from '../types'
 import { Button } from './Button'
-import { AlertIcon, MoreVerticalIcon, PlusIcon } from './Icons'
+import { AlertIcon, CableIcon, EquipmentIcon, MoreVerticalIcon, PlusIcon } from './Icons'
 import { IconButton } from './IconButton'
 import styles from './RecordList.module.css'
 
@@ -32,7 +32,10 @@ export function RecordList({ sectionId, cables, equipments, highlightId, ...hand
     <div className={styles.container}>
       {cables.length > 0 && (
         <div className={styles.group}>
-          <span className={styles.groupLabel}>케이블 {cables.length}</span>
+          <span className={styles.groupLabel}>
+            <CableIcon size={14} />
+            케이블 {cables.length}
+          </span>
           {cables.map((cable) => (
             <CableRow
               key={cable.id}
@@ -177,7 +180,10 @@ function EquipmentGroup({
 }) {
   return (
     <div className={styles.group}>
-      <span className={styles.groupLabel}>{label}</span>
+      <span className={styles.groupLabel}>
+        <EquipmentIcon size={14} />
+        {label}
+      </span>
       {items.map((item) => (
         <div
           key={item.id}
