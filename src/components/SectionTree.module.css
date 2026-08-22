@@ -154,12 +154,10 @@
 }
 
 .summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-1) var(--sp-2);
   font-size: var(--fs-xs);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  word-break: break-word;
 }
 
 .controls {

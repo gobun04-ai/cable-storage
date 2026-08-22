@@ -28,15 +28,16 @@
   color: var(--text-muted);
 }
 
+/* 이 화면의 결론이다. 다른 숫자와 같은 크기로 두면 어디를 봐야 할지 알 수 없다. */
 .headlineValue {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-2xl);
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   font-variant-numeric: tabular-nums;
 }
 
 .headlineUnit {
-  font-size: var(--fs-md);
+  font-size: var(--fs-lg);
   font-weight: var(--fw-regular);
   color: var(--text-muted);
 }

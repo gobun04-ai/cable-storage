@@ -42,10 +42,20 @@ interface NodeViewProps extends SectionTreeProps {
   isLast: boolean
 }
 
+/** 접었을 때 안에 무엇이 얼마나 들었는지 한 줄로 알린다. 없는 종류는 뺀다. */
+function collapsedSummary(counts: ReturnType<typeof countSubtree>): string {
+  const parts: string[] = []
+  if (counts.descendants > 0) parts.push(`하위 ${counts.descendants}`)
+  if (counts.cables > 0) parts.push(`케이블 ${counts.cables}`)
+  if (counts.equipments > 0) parts.push(`장비 ${counts.equipments}`)
+  return parts.join(' · ')
+}
+
 function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
   const { collapsed, reorderMode, onToggle, onMenu, onMove, records, highlightId } = shared
 
   const counts = countSubtree(node)
+  const summary = collapsedSummary(counts)
   const hasChildren = node.children.length > 0
   const hasOwnRecords = node.cables.length > 0 || node.equipments.length > 0
   const canCollapse = hasChildren || hasOwnRecords
@@ -81,13 +91,7 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
             {node.section.memo !== '' && <span className={styles.memo}>{node.section.memo}</span>}
 
             {/* 접었을 때는 안에 무엇이 얼마나 들었는지만 요약해서 보여 준다 */}
-            {!expanded && (counts.descendants > 0 || counts.cables > 0 || counts.equipments > 0) && (
-              <span className={styles.summary}>
-                {counts.descendants > 0 && <span>하위 {counts.descendants}</span>}
-                {counts.cables > 0 && <span>케이블 {counts.cables}</span>}
-                {counts.equipments > 0 && <span>장비 {counts.equipments}</span>}
-              </span>
-            )}
+            {!expanded && summary !== '' && <span className={styles.summary}>{summary}</span>}
           </button>
 
           <div className={styles.controls}>

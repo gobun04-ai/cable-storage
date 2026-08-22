@@ -10,8 +10,9 @@
   flex-direction: column;
 }
 
+/* 좌측 padding 은 아래 .rowBody 와 같아야 한다. 어긋나면 라벨과 목록의 정렬선이 흐트러진다. */
 .groupLabel {
-  padding: var(--sp-2) var(--sp-2) var(--sp-1);
+  padding: var(--sp-3) var(--sp-3) var(--sp-1);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   color: var(--text-muted);
@@ -88,17 +89,49 @@
 
 .route {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--sp-1);
   font-size: var(--fs-xs);
   color: var(--text-muted);
+}
+
+/*
+ * 시작점과 종단.
+ * 맨 글자로 늘어놓으면 두 지명이 붙어 읽히므로, 장비 배지와 같은 알약으로 감싸
+ * 각각이 한 덩어리임을 드러낸다. 방향은 사이의 꺾쇠가 맡는다.
+ */
+.routeChip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px var(--sp-2);
+  background: var(--surface-2);
+  border-radius: var(--r-full);
+  color: var(--text);
   word-break: break-word;
 }
 
-/* From 과 To 를 잇는 유일한 기호다. 테두리색으로 두면 흐려서 두 지명이 붙어 보인다. */
-.arrow {
+/*
+ * 아직 적지 않은 쪽. 빈 알약을 두면 값이 있는 것처럼 보이므로 바탕을 지운다.
+ * 다만 "안 적었다"도 읽어야 할 정보이므로 글자색까지 흐리지는 않는다.
+ */
+.routeChipEmpty {
+  padding-inline: var(--sp-1);
+  background: transparent;
   color: var(--text-muted);
+}
+
+.routeArrow {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+/* 장비 규격처럼 한 줄로 흐르는 보조 텍스트 */
+.spec {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  word-break: break-word;
 }
 
 /* 물량은 이 앱을 쓰는 이유다. 보조 정보와 같은 크기로 두지 않는다. */
@@ -141,7 +174,7 @@
 /* 교체/신규 구분은 색만이 아니라 글자로도 드러낸다 */
 .badge {
   flex: 0 0 auto;
-  padding: 1px var(--sp-2);
+  padding: 2px var(--sp-2);
   border-radius: var(--r-full);
   border: 1px solid transparent;
   font-size: var(--fs-xs);

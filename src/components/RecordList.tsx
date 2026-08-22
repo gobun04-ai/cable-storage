@@ -2,7 +2,7 @@ import { evaluateQuantity } from '../lib/expr'
 import { formatNumber } from '../lib/format'
 import type { CableRecord, EquipmentRecord, Id } from '../types'
 import { Button } from './Button'
-import { AlertIcon, MoreVerticalIcon, PlusIcon } from './Icons'
+import { AlertIcon, ChevronRightIcon, MoreVerticalIcon, PlusIcon } from './Icons'
 import { IconButton } from './IconButton'
 import styles from './RecordList.module.css'
 
@@ -97,11 +97,12 @@ function CableRow({
 
         {hasRoute && (
           <span className={styles.route}>
-            <span>{cable.from === '' ? '—' : cable.from}</span>
-            <span className={styles.arrow} aria-hidden="true">
-              →
-            </span>
-            <span>{cable.to === '' ? '—' : cable.to}</span>
+            <RouteChip value={cable.from} />
+            {/* 화면에서는 꺾쇠가, 읽어 주는 기기에서는 조사가 방향을 알린다 */}
+            <span className="sr-only">에서</span>
+            <ChevronRightIcon size={12} className={styles.routeArrow} />
+            <RouteChip value={cable.to} />
+            <span className="sr-only">까지</span>
           </span>
         )}
 
@@ -118,6 +119,17 @@ function CableRow({
         />
       </div>
     </div>
+  )
+}
+
+/** 시작점·종단 한 칸. 아직 적지 않았으면 빈 알약 대신 흐린 줄표로 자리만 남긴다. */
+function RouteChip({ value }: { value: string }) {
+  const empty = value === ''
+
+  return (
+    <span className={[styles.routeChip, empty ? styles.routeChipEmpty : undefined].filter(Boolean).join(' ')}>
+      {empty ? '—' : value}
+    </span>
   )
 }
 
@@ -182,7 +194,7 @@ function EquipmentGroup({
               <span className={styles.qty}>{item.qty}개</span>
             </span>
 
-            {item.spec !== '' && <span className={styles.route}>{item.spec}</span>}
+            {item.spec !== '' && <span className={styles.spec}>{item.spec}</span>}
             {item.note !== '' && <span className={styles.note}>{item.note}</span>}
           </button>
 
