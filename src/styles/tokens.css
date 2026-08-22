@@ -1,10 +1,18 @@
 /*
  * 디자인 토큰.
  * 색상은 반드시 여기에서만 정의한다. 컴포넌트 CSS에 색상 값을 직접 쓰지 않는다.
- * 라이트 값을 기본으로 두고, 다크는 (1) 시스템 설정 (2) 사용자의 수동 선택 양쪽에서 덮어쓴다.
+ *
+ * 라이트·다크 값은 light-dark(라이트, 다크) 로 한 줄에 함께 적는다.
+ * 둘 중 어느 쪽이 뽑히는지는 아래 color-scheme 이 정한다.
+ *   - data-theme 없음  → color-scheme: light dark → 기기 설정을 따른다
+ *   - data-theme=light → 라이트 고정
+ *   - data-theme=dark  → 다크 고정
+ * 값을 한 곳에만 두어 한쪽만 고쳐 어긋나는 일을 없앤다.
  */
 
 :root {
+  color-scheme: light dark;
+
   /* ---- 간격 스케일 ---- */
   --sp-1: 4px;
   --sp-2: 8px;
@@ -37,6 +45,11 @@
 
   /* ---- 터치 영역 (WCAG 2.1 AA 최소 44px) ---- */
   --tap-min: 44px;
+  /* 화면의 주요 액션에 쓰는 큰 버튼 높이 */
+  --tap-lg: 52px;
+
+  /* 하단 고정 액션 바가 차지하는 높이. 콘텐츠가 비워 둘 여백을 여기에서 함께 계산한다. */
+  --bottom-bar-h: calc(var(--sp-3) + var(--tap-lg) + var(--sp-3));
 
   /* ---- 모션 ---- */
   --dur-fast: 150ms;
@@ -49,38 +62,51 @@
   --z-sheet: 110;
   --z-toast: 200;
 
-  /* ---- 색: 라이트 ---- */
-  --bg: #ffffff;
-  --surface: #f5f7f9;
-  --surface-2: #ebeff3;
-  --border: #dde2e8;
-  --border-strong: #b9c1cb;
+  /* ---- 색 ---- */
+  /* 괄호 안 대비는 라이트 / 다크 순서 */
+  --bg: light-dark(#ffffff, #14171a);
+  --surface: light-dark(#f5f7f9, #1d2126);
+  --surface-2: light-dark(#ebeff3, #262c33);
+  /* 카드 경계. 배경색이 같은 카드를 구분하는 유일한 수단이라 야외에서도 보이게 잡는다 */
+  --border: light-dark(#c0c9d3, #454e58);
+  /* 입력칸·버튼처럼 조작하는 요소의 경계. WCAG 1.4.11 을 지켜 3:1 이상 (3.42 / 3.72) */
+  --border-strong: light-dark(#818c99, #68737f);
 
-  --text: #16191d;
-  --text-muted: #5b6470; /* 흰 배경 대비 6.0:1 */
-  --text-on-accent: #ffffff;
+  --text: light-dark(#16191d, #e9ecef); /* 17.6 / 15.2 */
+  --text-muted: light-dark(#5b6470, #a3adb8); /* 6.0 / 7.9 */
+  /* 다크의 accent 는 밝아서 흰 글자가 얹히지 않는다. 어두운 글자를 쓴다 */
+  --text-on-accent: light-dark(#ffffff, #0b1220); /* 6.5 / 7.8 */
 
-  --accent: #1257c7; /* 흰 배경 대비 6.5:1 */
-  --accent-hover: #0f49a8;
-  --accent-active: #0d3d8f;
-  --accent-soft: #e8f0fd;
+  --accent: light-dark(#1257c7, #6fa8ff); /* 6.5 / 7.5 */
+  --accent-hover: light-dark(#0f49a8, #8ab9ff);
+  --accent-active: light-dark(#0d3d8f, #a5caff);
+  --accent-soft: light-dark(#e8f0fd, #1b2c47);
 
-  --danger: #c0271f; /* 흰 배경 대비 5.6:1 */
-  --danger-hover: #a11f18;
-  --danger-soft: #fdecea;
-  --text-on-danger: #ffffff;
+  --danger: light-dark(#c0271f, #ff8a80); /* 5.9 / 7.9 */
+  --danger-hover: light-dark(#a11f18, #ffa39b);
+  --danger-active: light-dark(#85180f, #ffbcb5);
+  --danger-soft: light-dark(#fdecea, #3a1f1c);
+  /* 밝은 산호색 위에 흰 글씨를 얹으면 대비가 2.3:1 밖에 안 되므로 어두운 글자를 쓴다 */
+  --text-on-danger: light-dark(#ffffff, #2a1210); /* 5.9 / 7.7 */
 
-  --success: #1b7a3e;
-  --success-soft: #e7f5ec;
-  --warn: #96601b;
-  --warn-soft: #fdf1de;
+  --success: light-dark(#1b7a3e, #6fd694);
+  --success-soft: light-dark(#e7f5ec, #16301f);
+  --warn: light-dark(#96601b, #e5b567);
+  --warn-soft: light-dark(#fdf1de, #33280f);
 
-  --focus-ring: #1257c7;
-  --overlay: rgba(16, 20, 26, 0.5);
+  --focus-ring: light-dark(#1257c7, #8ab9ff);
+  --overlay: light-dark(rgba(16, 20, 26, 0.5), rgba(0, 0, 0, 0.6));
 
-  --shadow-1: 0 1px 2px rgba(16, 20, 26, 0.08), 0 1px 3px rgba(16, 20, 26, 0.06);
-  --shadow-2: 0 4px 12px rgba(16, 20, 26, 0.12), 0 2px 4px rgba(16, 20, 26, 0.08);
-  --shadow-3: 0 12px 32px rgba(16, 20, 26, 0.18);
+  /*
+   * 그림자. 오프셋과 흐림은 두 모드가 같고 색만 달라진다.
+   * 다크에서는 두 번째 레이어를 투명하게 두어 한 겹으로 떨어뜨린다 —
+   * 어두운 배경에서는 그림자보다 표면 밝기 차이가 깊이를 만든다.
+   */
+  --shadow-1: 0 1px 2px light-dark(rgba(16, 20, 26, 0.08), rgba(0, 0, 0, 0.4)),
+    0 1px 3px light-dark(rgba(16, 20, 26, 0.06), transparent);
+  --shadow-2: 0 4px 12px light-dark(rgba(16, 20, 26, 0.12), rgba(0, 0, 0, 0.5)),
+    0 2px 4px light-dark(rgba(16, 20, 26, 0.08), transparent);
+  --shadow-3: 0 12px 32px light-dark(rgba(16, 20, 26, 0.18), rgba(0, 0, 0, 0.6));
 
   /* ---- 글꼴 ---- */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR',
@@ -88,76 +114,11 @@
   --font-mono: 'Cascadia Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 }
 
-/* 다크: 시스템 설정을 따르되, 사용자가 라이트를 고정했으면 적용하지 않는다 */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --bg: #14171a;
-    --surface: #1d2126;
-    --surface-2: #262c33;
-    --border: #333a42;
-    --border-strong: #4b545e;
-
-    --text: #e9ecef; /* 대비 15.2:1 */
-    --text-muted: #a3adb8; /* 대비 7.9:1 */
-    --text-on-accent: #0b1220;
-
-    --accent: #6fa8ff; /* 대비 7.5:1 */
-    --accent-hover: #8ab9ff;
-    --accent-active: #a5caff;
-    --accent-soft: #1b2c47;
-
-    --danger: #ff8a80;
-    --danger-hover: #ffa39b;
-    --danger-soft: #3a1f1c;
-    /* 밝은 산호색 위에 흰 글씨를 얹으면 대비가 2.3:1 밖에 안 되므로 어두운 글자를 쓴다 */
-    --text-on-danger: #2a1210;
-
-    --success: #6fd694;
-    --success-soft: #16301f;
-    --warn: #e5b567;
-    --warn-soft: #33280f;
-
-    --focus-ring: #8ab9ff;
-    --overlay: rgba(0, 0, 0, 0.6);
-
-    /* 다크모드에서는 그림자 대신 표면 밝기 차이로 깊이를 표현한다 */
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.5);
-    --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.6);
-  }
+/* 사용자가 직접 고른 테마는 기기 설정보다 우선한다 */
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
-/* 다크: 사용자가 직접 고른 경우 (시스템 설정보다 우선) */
 :root[data-theme='dark'] {
-  --bg: #14171a;
-  --surface: #1d2126;
-  --surface-2: #262c33;
-  --border: #333a42;
-  --border-strong: #4b545e;
-
-  --text: #e9ecef;
-  --text-muted: #a3adb8;
-  --text-on-accent: #0b1220;
-
-  --accent: #6fa8ff;
-  --accent-hover: #8ab9ff;
-  --accent-active: #a5caff;
-  --accent-soft: #1b2c47;
-
-  --danger: #ff8a80;
-  --danger-hover: #ffa39b;
-  --danger-soft: #3a1f1c;
-  --text-on-danger: #2a1210;
-
-  --success: #6fd694;
-  --success-soft: #16301f;
-  --warn: #e5b567;
-  --warn-soft: #33280f;
-
-  --focus-ring: #8ab9ff;
-  --overlay: rgba(0, 0, 0, 0.6);
-
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
 }
