@@ -18,7 +18,8 @@ interface CableFormSheetProps {
   initial?: CableInput | undefined
   /** 자동완성 후보를 뽑을 대상 */
   body: ProjectBody
-  onSubmit: (input: CableInput) => void
+  /** keepOpen 이면 시트를 닫지 않는다. 한 항목에 여러 건을 이어서 적을 때 쓴다. */
+  onSubmit: (input: CableInput, options: { keepOpen: boolean }) => void
   onClose: () => void
 }
 
@@ -36,7 +37,10 @@ export function CableFormSheet({
   const [typeError, setTypeError] = useState<string | undefined>(undefined)
   const [quantityError, setQuantityError] = useState<string | undefined>(undefined)
   const [keypadOpen, setKeypadOpen] = useState(false)
+  // 시트를 연 뒤 [계속] 으로 이어 적은 건수. 방금 적은 줄이 시트에 가려 보이지 않으므로 여기에 알린다.
+  const [addedCount, setAddedCount] = useState(0)
 
+  const typeInputRef = useRef<HTMLInputElement>(null)
   const quantityInputRef = useRef<HTMLInputElement>(null)
   const keypadRef = useRef<HTMLDivElement>(null)
 
@@ -46,6 +50,7 @@ export function CableFormSheet({
     setTypeError(undefined)
     setQuantityError(undefined)
     setKeypadOpen(false)
+    setAddedCount(0)
   }, [open, initial])
 
   // 키패드가 펼쳐지면 시트 안에서 가려지지 않도록 보이는 위치까지 끌어온다
@@ -76,7 +81,7 @@ export function CableFormSheet({
     return value.trim() === '' ? '케이블 종류를 입력해 주세요. 예: CV 4C 25sq' : undefined
   }
 
-  function handleSubmit(): void {
+  function handleSubmit(keepOpen: boolean): void {
     const nextTypeError = validateType(values.cableType)
     const nextQuantityError = quantity.ok ? undefined : quantity.message
 
@@ -84,13 +89,24 @@ export function CableFormSheet({
     setQuantityError(nextQuantityError)
     if (nextTypeError !== undefined || nextQuantityError !== undefined) return
 
-    onSubmit({
-      cableType: values.cableType.trim(),
-      from: values.from.trim(),
-      to: values.to.trim(),
-      quantityExpr: values.quantityExpr.trim(),
-      note: values.note.trim(),
-    })
+    onSubmit(
+      {
+        cableType: values.cableType.trim(),
+        from: values.from.trim(),
+        to: values.to.trim(),
+        quantityExpr: values.quantityExpr.trim(),
+        note: values.note.trim(),
+      },
+      { keepOpen },
+    )
+
+    if (!keepOpen) return
+
+    // 다음 건을 곧바로 적을 수 있게 칸을 비우고 첫 칸으로 돌아간다
+    setValues(EMPTY)
+    setKeypadOpen(false)
+    setAddedCount((count) => count + 1)
+    typeInputRef.current?.focus()
   }
 
   // 입력 도중에는 오류를 새로 띄우지 않고, 계산이 되는 동안만 합계를 보여 준다
@@ -112,14 +128,26 @@ export function CableFormSheet({
       open={open}
       onClose={onClose}
       title={initial ? '케이블 수정' : `케이블 추가 · ${sectionLabel}`}
+      notice={addedCount > 0 ? `이번에 ${addedCount}건 추가했습니다.` : undefined}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
             취소
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            {initial ? '저장' : '추가'}
-          </Button>
+          {initial ? (
+            <Button variant="primary" onClick={() => handleSubmit(false)}>
+              저장
+            </Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={() => handleSubmit(false)}>
+                추가
+              </Button>
+              <Button variant="primary" onClick={() => handleSubmit(true)}>
+                계속
+              </Button>
+            </>
+          )}
         </>
       }
     >
@@ -127,6 +155,7 @@ export function CableFormSheet({
         label="케이블 종류"
         required
         autoFocus
+        inputRef={typeInputRef}
         value={values.cableType}
         suggestions={typeSuggestions}
         placeholder="CV 4C 25sq"

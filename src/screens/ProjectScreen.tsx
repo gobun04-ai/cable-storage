@@ -276,7 +276,7 @@ export function ProjectScreen() {
 
   // ---------- 케이블 ----------
 
-  function handleCableSubmit(input: CableInput): void {
+  function handleCableSubmit(input: CableInput, options: { keepOpen: boolean }): void {
     if (!project || cableForm.mode === 'closed') return
 
     // 다음 입력 때 바로 꺼내 쓸 수 있게 이번에 적은 값을 기억해 둔다
@@ -292,6 +292,9 @@ export function ProjectScreen() {
       // 항목이 접혀 있으면 방금 적은 줄이 보이지 않는다
       if (collapsed.has(sectionId)) toggle(sectionId)
       highlight(result.cableId)
+
+      // [계속] 으로 적는 중이면 시트를 열어 둔다
+      if (options.keepOpen) return
     } else {
       const cableId = cableForm.cable.id
       applyBody(project, (body) => updateCable(body, cableId, input), '케이블을 수정하지 못했습니다.')
@@ -308,7 +311,7 @@ export function ProjectScreen() {
 
   // ---------- 장비 ----------
 
-  function handleEquipmentSubmit(input: EquipmentInput): void {
+  function handleEquipmentSubmit(input: EquipmentInput, options: { keepOpen: boolean }): void {
     if (!project || equipmentForm.mode === 'closed') return
 
     rememberValue('equipmentName', input.name)
@@ -322,6 +325,9 @@ export function ProjectScreen() {
       // 항목이 접혀 있으면 방금 적은 줄이 보이지 않는다
       if (collapsed.has(sectionId)) toggle(sectionId)
       highlight(result.equipmentId)
+
+      // [계속] 으로 적는 중이면 시트를 열어 둔다
+      if (options.keepOpen) return
     } else {
       const equipmentId = equipmentForm.equipment.id
       applyBody(project, (body) => updateEquipment(body, equipmentId, input), '장비를 수정하지 못했습니다.')

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { suggestValues } from '../lib/suggest'
 import type { EquipmentInput } from '../lib/records'
 import type { EquipmentKind, ProjectBody } from '../types'
@@ -15,7 +15,8 @@ interface EquipmentFormSheetProps {
   /** 새로 추가할 때 미리 선택해 둘 구분 */
   defaultKind?: EquipmentKind | undefined
   body: ProjectBody
-  onSubmit: (input: EquipmentInput) => void
+  /** keepOpen 이면 시트를 닫지 않는다. 한 항목에 여러 건을 이어서 적을 때 쓴다. */
+  onSubmit: (input: EquipmentInput, options: { keepOpen: boolean }) => void
   onClose: () => void
 }
 
@@ -44,6 +45,10 @@ export function EquipmentFormSheet({
 
   const [nameError, setNameError] = useState<string | undefined>(undefined)
   const [qtyError, setQtyError] = useState<string | undefined>(undefined)
+  // 시트를 연 뒤 [계속] 으로 이어 적은 건수. 방금 적은 줄이 시트에 가려 보이지 않으므로 여기에 알린다.
+  const [addedCount, setAddedCount] = useState(0)
+
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -54,6 +59,7 @@ export function EquipmentFormSheet({
     setNote(initial?.note ?? '')
     setNameError(undefined)
     setQtyError(undefined)
+    setAddedCount(0)
   }, [open, initial, defaultKind])
 
   const nameSuggestions = useMemo(
@@ -81,7 +87,7 @@ export function EquipmentFormSheet({
     return undefined
   }
 
-  function handleSubmit(): void {
+  function handleSubmit(keepOpen: boolean): void {
     const nextNameError = validateName(name)
     const nextQtyError = validateQty(qtyText)
 
@@ -89,13 +95,28 @@ export function EquipmentFormSheet({
     setQtyError(nextQtyError)
     if (nextNameError !== undefined || nextQtyError !== undefined) return
 
-    onSubmit({
-      kind,
-      name: name.trim(),
-      qty: Number(qtyText.trim()),
-      spec: spec.trim(),
-      note: note.trim(),
-    })
+    onSubmit(
+      {
+        kind,
+        name: name.trim(),
+        qty: Number(qtyText.trim()),
+        spec: spec.trim(),
+        note: note.trim(),
+      },
+      { keepOpen },
+    )
+
+    if (!keepOpen) return
+
+    // 다음 건을 곧바로 적을 수 있게 칸을 비우고 첫 칸으로 돌아간다.
+    // 구분(교체/신규)만은 시트를 열 때 고른 값으로 되돌린다 — 같은 구분을 이어서 적는 경우가 많다.
+    setKind(defaultKind)
+    setName('')
+    setQtyText('1')
+    setSpec('')
+    setNote('')
+    setAddedCount((count) => count + 1)
+    nameInputRef.current?.focus()
   }
 
   return (
@@ -103,14 +124,26 @@ export function EquipmentFormSheet({
       open={open}
       onClose={onClose}
       title={initial ? '장비 수정' : `장비 추가 · ${sectionLabel}`}
+      notice={addedCount > 0 ? `이번에 ${addedCount}건 추가했습니다.` : undefined}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
             취소
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            {initial ? '저장' : '추가'}
-          </Button>
+          {initial ? (
+            <Button variant="primary" onClick={() => handleSubmit(false)}>
+              저장
+            </Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={() => handleSubmit(false)}>
+                추가
+              </Button>
+              <Button variant="primary" onClick={() => handleSubmit(true)}>
+                계속
+              </Button>
+            </>
+          )}
         </>
       }
     >
@@ -120,6 +153,7 @@ export function EquipmentFormSheet({
         label="장비명"
         required
         autoFocus
+        inputRef={nameInputRef}
         value={name}
         suggestions={nameSuggestions}
         placeholder="MCCB 100A"

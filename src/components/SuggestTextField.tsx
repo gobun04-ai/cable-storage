@@ -1,4 +1,4 @@
-import { useState, type FocusEvent, type InputHTMLAttributes, type ReactNode } from 'react'
+import { useState, type FocusEvent, type InputHTMLAttributes, type ReactNode, type Ref } from 'react'
 import { TextField } from './TextField'
 import styles from './SuggestTextField.module.css'
 
@@ -17,6 +17,8 @@ interface SuggestTextFieldProps extends PassThrough {
   error?: string | undefined
   required?: boolean | undefined
   onBlurValue?: ((value: string) => void) | undefined
+  /** 바깥에서 포커스를 옮겨야 할 때 쓴다. 예: 연속 추가 뒤 첫 칸으로 되돌리기 */
+  inputRef?: Ref<HTMLInputElement> | undefined
 }
 
 /** 입력칸 아래에 "이전에 쓴 값"을 칩으로 보여 주고, 누르면 그대로 채워 넣는다. */
@@ -29,6 +31,7 @@ export function SuggestTextField({
   error,
   required,
   onBlurValue,
+  inputRef,
   ...rest
 }: SuggestTextFieldProps) {
   const [focused, setFocused] = useState(false)
@@ -45,6 +48,7 @@ export function SuggestTextField({
       <TextField
         {...rest}
         label={label}
+        inputRef={inputRef}
         value={value}
         hint={hint}
         error={error}

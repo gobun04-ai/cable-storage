@@ -10,6 +10,8 @@
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
   line-height: 1;
+  /* 버튼을 나란히 놓아 좁아져도 글자가 두 줄로 접히지 않게 한다 */
+  white-space: nowrap;
   text-decoration: none;
   transition:
     background-color var(--dur-fast) var(--ease-out),

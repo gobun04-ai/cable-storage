@@ -79,6 +79,31 @@
 
 .footer > * {
   flex: 1 1 0;
+  min-width: 0;
+}
+
+/*
+ * 버튼이 셋까지 늘어나므로 좌우 여백을 줄여 한 줄에 담는다.
+ * 높이는 건드리지 않는다 — 손가락으로 누르는 최소 크기다.
+ */
+.footer > button {
+  padding-inline: var(--sp-2);
+}
+
+/*
+ * 진행 상황을 알리는 줄(예: 연속 추가 건수).
+ * 시트는 브라우저 최상위 레이어에 그려져 토스트가 뒤에 가리므로 본문 안에 둔다.
+ */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--success);
+  border-radius: var(--r-md);
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: var(--fs-sm);
 }
 
 /* 화면이 넓으면 하단 시트 대신 가운데 카드로 */

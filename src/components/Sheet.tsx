@@ -9,6 +9,8 @@ interface SheetProps {
   onClose: () => void
   title: string
   children: ReactNode
+  /** 본문 맨 위에 붙는 진행 상황 줄. 연속 추가 건수처럼 시트를 닫지 않고 알릴 내용에 쓴다. */
+  notice?: ReactNode
   /** 확인/취소 버튼 영역 */
   footer?: ReactNode
 }
@@ -17,7 +19,7 @@ interface SheetProps {
  * 바텀시트 형태의 모달.
  * 네이티브 <dialog> 를 쓰므로 포커스 가두기, Esc 닫기, 닫은 뒤 포커스 복귀를 브라우저가 처리한다.
  */
-export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
+export function Sheet({ open, onClose, title, children, notice, footer }: SheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   // 안드로이드 뒤로가기 버튼은 화면을 벗어나지 않고 이 시트만 닫아야 한다
@@ -63,7 +65,14 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
           <h2 className={styles.title}>{title}</h2>
           <IconButton label="닫기" icon={<CloseIcon />} onClick={onClose} />
         </div>
-        <div className={styles.body}>{children}</div>
+        <div className={styles.body}>
+          {notice !== undefined && (
+            <p className={styles.notice} role="status">
+              {notice}
+            </p>
+          )}
+          {children}
+        </div>
         {footer !== undefined && <div className={styles.footer}>{footer}</div>}
       </div>
     </dialog>
