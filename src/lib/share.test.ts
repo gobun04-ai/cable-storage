@@ -15,6 +15,16 @@ function stubNavigator(overrides: { share?: unknown; canShare?: unknown } = {}):
   return { share }
 }
 
+/** 지정한 이름의 오류를 던지는 공유 함수 */
+function throwingNavigator(error: unknown): void {
+  vi.stubGlobal('navigator', {
+    canShare: () => true,
+    share: async () => {
+      throw error
+    },
+  })
+}
+
 beforeEach(() => {
   // 공유 실패는 구조화 로그를 남긴다. 테스트 출력이 묻히지 않게 가린다.
   vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -28,22 +38,33 @@ afterEach(() => {
 
 describe('shareFile', () => {
   it('공유 시트로 파일을 보내면 shared 를 돌려준다', async () => {
-    const { share } = stubNavigator()
+    stubNavigator()
 
-    await expect(shareFile({ title: '물량', file: FILE })).resolves.toBe('shared')
-    expect(share).toHaveBeenCalledWith({ title: '물량', files: [FILE] })
+    await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'shared', reason: null })
+  })
+
+  it('지원 여부를 확인할 때와 똑같은 데이터를 넘긴다', async () => {
+    // 확인한 것과 다른 데이터를 넘기면 브라우저가 공유를 거부한다. 제목을 섞지 않는다.
+    const canShare = vi.fn(() => true)
+    const share = vi.fn(async () => undefined)
+    vi.stubGlobal('navigator', { canShare, share })
+
+    await shareFile(FILE)
+
+    expect(canShare).toHaveBeenCalledWith({ files: [FILE] })
+    expect(share).toHaveBeenCalledWith({ files: [FILE] })
   })
 
   it('공유 기능이 없는 브라우저에서는 unsupported 를 돌려준다', async () => {
     stubNavigator({ share: undefined, canShare: undefined })
 
-    await expect(shareFile({ title: '물량', file: FILE })).resolves.toBe('unsupported')
+    await expect(shareFile(FILE)).resolves.toMatchObject({ outcome: 'unsupported' })
   })
 
-  it('이 파일 형식을 받아 주지 않으면 공유를 시도하지 않고 unsupported 를 돌려준다', async () => {
+  it('이 파일 형식을 받아 주지 않으면 공유를 시도하지 않는다', async () => {
     const { share } = stubNavigator({ canShare: () => false })
 
-    await expect(shareFile({ title: '물량', file: FILE })).resolves.toBe('unsupported')
+    await expect(shareFile(FILE)).resolves.toMatchObject({ outcome: 'unsupported' })
     expect(share).not.toHaveBeenCalled()
   })
 
@@ -54,39 +75,24 @@ describe('shareFile', () => {
       },
     })
 
-    await expect(shareFile({ title: '물량', file: FILE })).resolves.toBe('unsupported')
+    await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'unsupported', reason: 'TypeError' })
   })
 
-  it('사용자가 공유 시트를 닫으면 cancelled 를 돌려준다', async () => {
-    vi.stubGlobal('navigator', {
-      canShare: () => true,
-      share: async () => {
-        throw new DOMException('사용자가 취소했습니다', 'AbortError')
-      },
-    })
+  it('사용자가 공유 시트를 닫으면 cancelled 를 돌려주고 이유를 남기지 않는다', async () => {
+    throwingNavigator(new DOMException('사용자가 취소했습니다', 'AbortError'))
 
-    await expect(shareFile({ title: '물량', file: FILE })).resolves.toBe('cancelled')
+    await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'cancelled', reason: null })
   })
 
-  it("'방금 누름' 상태가 풀려 막히면 retry 를 돌려준다", async () => {
-    vi.stubGlobal('navigator', {
-      canShare: () => true,
-      share: async () => {
-        throw new DOMException('user gesture required', 'NotAllowedError')
-      },
-    })
+  it('브라우저가 공유를 막으면 실패와 함께 그 이유를 돌려준다', async () => {
+    throwingNavigator(new DOMException('permission denied', 'NotAllowedError'))
 
-    await expect(shareFile({ title: '물량', file: FILE })).resolves.toBe('retry')
+    await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'failed', reason: 'NotAllowedError' })
   })
 
-  it('그 밖의 오류는 failed 를 돌려준다', async () => {
-    vi.stubGlobal('navigator', {
-      canShare: () => true,
-      share: async () => {
-        throw new Error('알 수 없는 오류')
-      },
-    })
+  it('오류가 아닌 것을 던져도 이유를 채워 돌려준다', async () => {
+    throwingNavigator('알 수 없음')
 
-    await expect(shareFile({ title: '물량', file: FILE })).resolves.toBe('failed')
+    await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'failed', reason: '알 수 없는 오류' })
   })
 })
