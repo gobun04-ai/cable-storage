@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { Button } from '../components/Button'
-import { AlertIcon, CableIcon, CopyIcon, EquipmentIcon, FolderIcon } from '../components/Icons'
+import { AlertIcon, CableIcon, CopyIcon, EquipmentIcon, FolderIcon, ShareIcon } from '../components/Icons'
 import { EmptyState, ErrorState, ListSkeleton } from '../components/States'
 import { loadProject, StorageError } from '../lib/db'
+import { downloadBlob } from '../lib/download'
 import { buildShareText } from '../lib/exportText'
-import { exportProjectToXlsx } from '../lib/exportXlsx'
+import { buildProjectXlsxFile } from '../lib/exportXlsx'
 import { formatNumber } from '../lib/format'
 import { log } from '../lib/logger'
-import { copyText, shareText } from '../lib/share'
+import { copyText, shareFile, shareText } from '../lib/share'
 import { summarize } from '../lib/summary'
 import { useToast } from '../state/ToastProvider'
 import type { Project } from '../types'
@@ -34,8 +35,12 @@ export function SummaryScreen() {
   const [sharing, setSharing] = useState(false)
   const [exporting, setExporting] = useState(false)
 
+  // 공유가 '방금 누름' 만료로 막혔을 때 만들어 둔 엑셀. 다시 만들지 않고 다음 클릭에 바로 쓴다.
+  const readyXlsx = useRef<File | null>(null)
+
   const reload = useCallback(async () => {
     setState({ status: 'loading' })
+    readyXlsx.current = null
     try {
       const project = await loadProject(projectId)
       setState(project ? { status: 'ready', project } : { status: 'missing' })
@@ -82,8 +87,21 @@ export function SummaryScreen() {
     if (!project || exporting) return
     setExporting(true)
     try {
-      await exportProjectToXlsx(project)
-      toast.show({ message: '엑셀 파일을 내려받았습니다.', tone: 'success' })
+      const file = readyXlsx.current ?? (await buildProjectXlsxFile(project))
+      readyXlsx.current = null
+
+      const outcome = await shareFile({ title: `${project.name} 물량`, file })
+
+      if (outcome === 'retry') {
+        readyXlsx.current = file
+        toast.show({ message: '엑셀을 준비했습니다. 한 번 더 누르면 공유됩니다.', tone: 'info' })
+      } else if (outcome === 'unsupported') {
+        // 파일 공유를 못 하는 브라우저에서는 내려받기 말고 방법이 없다
+        downloadBlob(file, file.name)
+        toast.show({ message: '이 브라우저는 앱 공유를 지원하지 않아 파일로 내려받았습니다.', tone: 'info' })
+      } else if (outcome === 'failed') {
+        toast.show({ message: '엑셀을 공유하지 못했습니다. 다시 시도해 주세요.', tone: 'error' })
+      }
     } catch (error) {
       log.error('xlsx_export_failed', { projectId }, error)
       toast.show({ message: '엑셀 파일을 만들지 못했습니다. 다시 시도해 주세요.', tone: 'error' })
@@ -244,8 +262,8 @@ export function SummaryScreen() {
                 <Button icon={<CopyIcon size={18} />} onClick={() => void handleCopy()}>
                   복사
                 </Button>
-                <Button loading={exporting} onClick={() => void handleExcel()}>
-                  엑셀 받기
+                <Button loading={exporting} icon={<ShareIcon size={18} />} onClick={() => void handleExcel()}>
+                  엑셀 공유
                 </Button>
               </div>
             </section>

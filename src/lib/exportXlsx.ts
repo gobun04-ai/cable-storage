@@ -1,5 +1,5 @@
 import type { Row, SheetData, Sheet } from 'write-excel-file/browser'
-import { downloadBlob, safeFileName } from './download'
+import { safeFileName } from './download'
 import { evaluateQuantity } from './expr'
 import { formatDate } from './format'
 import { log } from './logger'
@@ -13,6 +13,9 @@ import type { Project, SectionNode } from '../types'
  */
 
 const HEADER_BACKGROUND = '#EBEFF3'
+
+/** 공유받은 앱이 엑셀 파일로 알아보게 하려면 형식을 정확히 붙여야 한다. */
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 function headerRow(labels: readonly string[]): Row {
   return labels.map((label) => ({
@@ -188,18 +191,25 @@ export function buildWorkbookSheets(project: Project, now: number = Date.now()):
   ]
 }
 
-/** 엑셀 파일을 만들어 곧바로 내려받는다. */
-export async function exportProjectToXlsx(project: Project, now: number = Date.now()): Promise<void> {
+/**
+ * 엑셀 파일을 만들어 넘긴다.
+ * 다른 앱으로 보낼지 기기에 저장할지는 부르는 쪽이 정한다.
+ */
+export async function buildProjectXlsxFile(project: Project, now: number = Date.now()): Promise<File> {
   const sheets = buildWorkbookSheets(project, now)
 
   // 엑셀 생성기는 70KB 가까이 된다. 내보내기를 누른 순간에만 받아 와 첫 화면을 가볍게 유지한다.
   const { default: writeXlsxFile } = await import('write-excel-file/browser')
 
   const blob = await writeXlsxFile(sheets).toBlob()
-  downloadBlob(blob, safeFileName(`${project.name} 물량`, 'xlsx'))
-  log.info('xlsx_exported', {
+  const file = new File([blob], safeFileName(`${project.name} 물량`, 'xlsx'), { type: XLSX_MIME })
+
+  log.info('xlsx_built', {
     projectId: project.id,
+    bytes: file.size,
     cables: project.body.cables.length,
     equipments: project.body.equipments.length,
   })
+
+  return file
 }
