@@ -1,4 +1,4 @@
-import { evaluateQuantity } from './expr'
+import { evaluateQuantity, shouldShowExpression } from './expr'
 import { formatDate, formatNumber } from './format'
 import { summarize, type ProjectSummary } from './summary'
 import { buildTree, collectSubtreeIds, flattenTree } from './tree'
@@ -27,7 +27,7 @@ function quantityText(cable: CableRecord): string {
   if (!result.ok) return `${expression} (계산 불가)`
 
   const total = `${formatNumber(result.value)} m`
-  return result.terms > 1 ? `${expression} = ${total}` : total
+  return shouldShowExpression(expression, result.value) ? `${expression} = ${total}` : total
 }
 
 function cableLine(cable: CableRecord, depth: number): string[] {

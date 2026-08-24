@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { evaluateQuantity, sumQuantities } from './expr'
+import { evaluateQuantity, shouldShowExpression, sumQuantities } from './expr'
 
 /** 성공을 기대하는 경우의 값만 꺼내는 도우미 */
 function value(input: string): number {
@@ -153,6 +153,26 @@ describe('evaluateQuantity — 잘못된 입력', () => {
 
     expect(message).not.toContain('Error')
     expect(message).not.toContain('at ')
+  })
+})
+
+describe('shouldShowExpression', () => {
+  it('적은 값이 곧 결과면 수식을 덧붙이지 않는다', () => {
+    expect(shouldShowExpression('45', 45)).toBe(false)
+    expect(shouldShowExpression('  45  ', 45)).toBe(false)
+  })
+
+  it('덧셈뿐 아니라 곱셈·나눗셈·괄호가 든 식도 남긴다', () => {
+    expect(shouldShowExpression('2+3+5', 10)).toBe(true)
+    // 12 m 짜리 세 가닥이라는 뜻이 36 만 남으면 사라진다
+    expect(shouldShowExpression('12*3', 36)).toBe(true)
+    expect(shouldShowExpression('100/4', 25)).toBe(true)
+    expect(shouldShowExpression('(15+8)*2', 46)).toBe(true)
+  })
+
+  it('천 단위가 넘어도 적은 값과 같으면 덧붙이지 않는다', () => {
+    // 화면에는 1,200 으로 찍히지만 비교는 쉼표 없는 원래 수로 한다
+    expect(shouldShowExpression('1200', 1200)).toBe(false)
   })
 })
 

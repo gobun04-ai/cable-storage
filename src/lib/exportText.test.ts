@@ -66,6 +66,52 @@ const SAMPLE = project({
   },
 })
 
+describe('buildShareText — 물량 수식', () => {
+  /** 케이블 한 건만 있는 본문으로 그 식이 어떻게 적히는지 본다. */
+  function withExpr(quantityExpr: string): string {
+    return buildShareText(
+      project({
+        body: {
+          sections: [{ id: 's', parentId: null, title: '구역', memo: '', order: 0 }],
+          cables: [
+            { id: 'c', sectionId: 's', cableType: 'CV', from: '', to: '', quantityExpr, note: '', order: 0 },
+          ],
+          equipments: [],
+        },
+      }),
+      NOW,
+    )
+  }
+
+  it('덧셈으로 이어 적은 식을 남긴다', () => {
+    expect(withExpr('2+3+5')).toContain('2+3+5 = 10 m')
+  })
+
+  it('곱셈이 든 식도 남긴다', () => {
+    expect(withExpr('12*3')).toContain('12*3 = 36 m')
+  })
+
+  it('괄호가 든 식도 남긴다', () => {
+    expect(withExpr('(15+8)*2')).toContain('(15+8)*2 = 46 m')
+  })
+
+  it('나눗셈이 든 식도 남긴다', () => {
+    expect(withExpr('100/4')).toContain('100/4 = 25 m')
+  })
+
+  it('숫자 하나만 적었으면 수식을 덧붙이지 않는다', () => {
+    const text = withExpr('45')
+
+    expect(text).toContain('45 m')
+    expect(text).not.toContain('45 = 45')
+  })
+
+  it('천 단위가 넘는 숫자 하나도 수식을 덧붙이지 않는다', () => {
+    // 화면에는 1,200 으로 찍히지만 적은 값과 같은 수이므로 두 번 적을 이유가 없다
+    expect(withExpr('1200')).not.toContain('1200 =')
+  })
+})
+
 describe('buildSectionText', () => {
   it('받는 쪽이 어느 공사인지 알 수 있게 공사명을 머리에 남긴다', () => {
     const text = buildSectionText(SAMPLE, 's1a', NOW)

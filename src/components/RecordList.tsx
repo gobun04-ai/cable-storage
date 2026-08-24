@@ -1,4 +1,4 @@
-import { evaluateQuantity } from '../lib/expr'
+import { evaluateQuantity, shouldShowExpression } from '../lib/expr'
 import { formatNumber } from '../lib/format'
 import type { CableRecord, EquipmentRecord, Id } from '../types'
 import { Button } from './Button'
@@ -155,7 +155,7 @@ function QuantityText({ expression }: { expression: string }) {
 
   const total = `${formatNumber(result.value)} m`
   // "10" 처럼 숫자 하나면 수식을 따로 보여 줄 필요가 없다
-  const showExpression = result.terms > 1 || expression.trim() !== String(result.value)
+  const showExpression = shouldShowExpression(expression, result.value)
 
   return (
     <span className={styles.quantity}>
