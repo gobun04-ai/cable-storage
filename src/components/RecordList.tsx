@@ -100,13 +100,13 @@ function CableRow({
 
         {hasRoute && (
           <span className={styles.route}>
-            <RouteChip value={cable.from} />
+            <RouteChip label="FROM" value={cable.from} />
             {/* 화면에서는 화살표가, 읽어 주는 기기에서는 조사가 방향을 알린다 */}
             <span className="sr-only">에서</span>
             <span className={styles.routeArrow} aria-hidden="true">
               →
             </span>
-            <RouteChip value={cable.to} />
+            <RouteChip label="TO" value={cable.to} />
             <span className="sr-only">까지</span>
           </span>
         )}
@@ -127,12 +127,20 @@ function CableRow({
   )
 }
 
-/** 시작점·종단 한 칸. 아직 적지 않았으면 빈 알약 대신 흐린 줄표로 자리만 남긴다. */
-function RouteChip({ value }: { value: string }) {
+/**
+ * 시작점·종단 한 칸.
+ * 지명만 두 개 늘어놓으면 어느 쪽이 어디인지 헷갈리므로 FROM·TO 를 함께 적는다.
+ * 라벨은 읽어 주는 기기에서 건너뛴다 — 그쪽은 앞뒤의 조사가 방향을 알린다.
+ * 아직 적지 않았으면 빈 알약 대신 흐린 줄표로 자리만 남긴다.
+ */
+function RouteChip({ label, value }: { label: string; value: string }) {
   const empty = value === ''
 
   return (
     <span className={[styles.routeChip, empty ? styles.routeChipEmpty : undefined].filter(Boolean).join(' ')}>
+      <span className={styles.routeLabel} aria-hidden="true">
+        {label}
+      </span>
       {empty ? '—' : value}
     </span>
   )

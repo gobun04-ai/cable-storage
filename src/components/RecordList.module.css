@@ -106,13 +106,22 @@
  */
 .routeChip {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
+  gap: var(--sp-1);
   max-width: 100%;
   padding: 2px var(--sp-2);
   background: var(--surface-2);
   border-radius: var(--r-full);
   color: var(--text);
   word-break: break-word;
+}
+
+/* FROM · TO. 지명보다 흐리게 두어 어느 쪽인지는 알리되 지명이 먼저 읽히게 한다. */
+.routeLabel {
+  flex: 0 0 auto;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
 }
 
 /*
