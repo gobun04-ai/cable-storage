@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { shareFile } from './share'
+import { canShareType, shareFile } from './share'
 
 const FILE = new File(['xlsx'], 'A공장 증설 물량.xlsx', {
   type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -75,7 +75,10 @@ describe('shareFile', () => {
       },
     })
 
-    await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'unsupported', reason: 'TypeError' })
+    await expect(shareFile(FILE)).resolves.toEqual({
+      outcome: 'unsupported',
+      reason: 'TypeError: files not supported',
+    })
   })
 
   it('사용자가 공유 시트를 닫으면 cancelled 를 돌려주고 이유를 남기지 않는다', async () => {
@@ -84,8 +87,18 @@ describe('shareFile', () => {
     await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'cancelled', reason: null })
   })
 
-  it('브라우저가 공유를 막으면 실패와 함께 그 이유를 돌려준다', async () => {
-    throwingNavigator(new DOMException('permission denied', 'NotAllowedError'))
+  it('브라우저가 공유를 막으면 이름과 상세 메시지를 함께 돌려준다', async () => {
+    // 이 메시지가 원인을 가른다. 이름만으로는 정책 차단인지 사용자 동작 문제인지 구분할 수 없다.
+    throwingNavigator(new DOMException('Permission denied', 'NotAllowedError'))
+
+    await expect(shareFile(FILE)).resolves.toEqual({
+      outcome: 'failed',
+      reason: 'NotAllowedError: Permission denied',
+    })
+  })
+
+  it('메시지가 없는 오류는 이름만 돌려준다', async () => {
+    throwingNavigator(new DOMException('', 'NotAllowedError'))
 
     await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'failed', reason: 'NotAllowedError' })
   })
@@ -93,6 +106,36 @@ describe('shareFile', () => {
   it('오류가 아닌 것을 던져도 이유를 채워 돌려준다', async () => {
     throwingNavigator('알 수 없음')
 
-    await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'failed', reason: '알 수 없는 오류' })
+    await expect(shareFile(FILE)).resolves.toEqual({ outcome: 'failed', reason: '알 수 없음' })
+  })
+})
+
+describe('canShareType', () => {
+  it('브라우저가 받아 주는 형식이면 true', () => {
+    vi.stubGlobal('navigator', { share: () => undefined, canShare: () => true })
+
+    expect(canShareType('text/csv', 'csv')).toBe(true)
+  })
+
+  it('받지 않는 형식이면 false', () => {
+    vi.stubGlobal('navigator', { share: () => undefined, canShare: () => false })
+
+    expect(canShareType('application/octet-stream', 'exe')).toBe(false)
+  })
+
+  it('확인 기능이 없는 브라우저에서는 false', () => {
+    vi.stubGlobal('navigator', {})
+
+    expect(canShareType('text/csv', 'csv')).toBe(false)
+  })
+
+  it('확인하다 예외가 나도 false 로 넘어간다', () => {
+    vi.stubGlobal('navigator', {
+      canShare: () => {
+        throw new TypeError('probe failed')
+      },
+    })
+
+    expect(canShareType('text/csv', 'csv')).toBe(false)
   })
 })

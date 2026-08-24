@@ -72,9 +72,30 @@ export async function shareText(options: { title: string; text: string }): Promi
   return (await copyText(options.text)) ? 'copied' : 'failed'
 }
 
-/** 휴대폰에는 개발자 콘솔이 없다. 공유가 막힌 이유를 화면에 짧게 보여 주려고 오류 이름만 꺼낸다. */
+/** 진단 문구가 화면을 덮지 않도록 자른다. */
+const REASON_MAX = 140
+
+/** 휴대폰에는 개발자 콘솔이 없다. 공유가 막힌 이유를 화면에 보여 주려고 이름과 메시지를 꺼낸다. */
 function reasonOf(error: unknown): string {
-  return error instanceof Error && error.name !== '' ? error.name : '알 수 없는 오류'
+  if (!(error instanceof Error)) return String(error).slice(0, REASON_MAX)
+
+  const detail = error.message.trim()
+  return (detail === '' ? error.name : `${error.name}: ${detail}`).slice(0, REASON_MAX)
+}
+
+/**
+ * 이 브라우저가 해당 형식의 파일을 공유 대상으로 받아 주는지 알아본다.
+ * 공유가 거부됐을 때 형식 때문인지 가리는 용도라 실제 내용은 필요 없다.
+ */
+export function canShareType(mime: string, extension: string): boolean {
+  if (typeof navigator === 'undefined' || typeof navigator.canShare !== 'function') return false
+
+  try {
+    return navigator.canShare({ files: [new File([], `probe.${extension}`, { type: mime })] })
+  } catch (error) {
+    log.warn('share_type_probe_failed', { mime }, error)
+    return false
+  }
 }
 
 /**

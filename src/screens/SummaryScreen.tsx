@@ -10,7 +10,7 @@ import { buildShareText } from '../lib/exportText'
 import { buildProjectXlsxFile } from '../lib/exportXlsx'
 import { formatNumber } from '../lib/format'
 import { log } from '../lib/logger'
-import { copyText, shareFile, shareText } from '../lib/share'
+import { canShareType, copyText, shareFile, shareText } from '../lib/share'
 import { summarize } from '../lib/summary'
 import { useToast } from '../state/ToastProvider'
 import type { Project } from '../types'
@@ -24,6 +24,26 @@ type LoadState =
 
 function messageOf(error: unknown, fallback: string): string {
   return error instanceof StorageError ? error.userMessage : fallback
+}
+
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+/**
+ * 임시 진단 문구 — 엑셀 공유가 왜 막히는지 좁히는 동안만 둔다. 원인이 밝혀지면 사용자용 문구로 되돌린다.
+ *
+ * 휴대폰에는 개발자 콘솔이 없어 화면에 적는 것 말고는 원인을 알 방법이 없다.
+ * 형식이 문제인지 가리려고 세 가지를 함께 물어본다.
+ * exe 는 어느 브라우저나 막는 형식이라, 이것까지 '가능'으로 나오면 형식 검사 자체를 안 하는 브라우저다.
+ */
+function diagnosis(reason: string | null, prebuilt: boolean): string {
+  const mark = (ok: boolean): string => (ok ? 'O' : 'X')
+  const types = [
+    `xlsx:${mark(canShareType(XLSX_MIME, 'xlsx'))}`,
+    `csv:${mark(canShareType('text/csv', 'csv'))}`,
+    `exe:${mark(canShareType('application/octet-stream', 'exe'))}`,
+  ].join(' ')
+
+  return `[진단] ${reason ?? '원인 미상'} · 파일 ${prebuilt ? '준비됨' : '즉석생성'} · ${types}`
 }
 
 export function SummaryScreen() {
@@ -116,12 +136,12 @@ export function SummaryScreen() {
       const result = await shareFile(file)
 
       if (result.outcome === 'unsupported' || result.outcome === 'failed') {
-        // 공유가 막힌 기기에서는 내려받기 말고 방법이 없다. 원인을 함께 알려 다음 조치를 정할 수 있게 한다.
+        // 공유가 막힌 기기에서는 내려받기 말고 방법이 없다
         downloadBlob(file, file.name)
         toast.show({
-          message: `앱으로 공유하지 못해 파일로 내려받았습니다. (${result.reason ?? '원인 미상'})`,
+          message: `앱으로 공유하지 못해 파일로 내려받았습니다. ${diagnosis(result.reason, xlsx !== null)}`,
           tone: 'info',
-          durationMs: 7000,
+          durationMs: 15000,
         })
       }
     } catch (error) {
