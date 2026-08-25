@@ -42,34 +42,36 @@ export function TextField(props: InputProps | TextareaProps) {
     'aria-required': required || undefined,
   } as const
 
+  /*
+   * 반드시 적어야 하는 칸은 채워졌는지를 테두리 색으로 알린다.
+   * 값을 넘기지 않는(제어하지 않는) 칸은 판단할 수 없으므로 그대로 둔다.
+   */
+  const tracked = required && props.value !== undefined
+  const filled = tracked && String(props.value).trim() !== ''
+
+  // 검증에 걸린 칸은 메시지까지 붙으므로 그쪽이 우선한다
+  const stateClass =
+    error !== undefined ? styles.invalid : !tracked ? undefined : filled ? styles.satisfied : styles.needsInput
+
+  const controlClass = (extra?: string): string =>
+    [styles.control, extra, stateClass].filter(Boolean).join(' ')
+
   return (
     <div className={styles.field}>
       <label className={styles.label} htmlFor={inputId}>
         {label}
         {required && (
-          <span className={styles.required} aria-hidden="true">
-            *
+          // 색만으로는 적록색약 사용자가 구분하지 못하므로 채워지면 모양도 바꾼다
+          <span className={[styles.required, filled ? styles.requiredDone : undefined].filter(Boolean).join(' ')} aria-hidden="true">
+            {filled ? '✓' : '*'}
           </span>
         )}
       </label>
 
       {props.multiline === true ? (
-        <textarea
-          {...stripCommon(props)}
-          {...shared}
-          className={[styles.control, styles.textarea, error !== undefined ? styles.invalid : undefined]
-            .filter(Boolean)
-            .join(' ')}
-        />
+        <textarea {...stripCommon(props)} {...shared} className={controlClass(styles.textarea)} />
       ) : (
-        <input
-          {...stripCommon(props)}
-          {...shared}
-          ref={props.inputRef}
-          className={[styles.control, error !== undefined ? styles.invalid : undefined]
-            .filter(Boolean)
-            .join(' ')}
-        />
+        <input {...stripCommon(props)} {...shared} ref={props.inputRef} className={controlClass()} />
       )}
 
       {hint !== undefined && (

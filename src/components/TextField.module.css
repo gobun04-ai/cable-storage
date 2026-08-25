@@ -16,6 +16,11 @@
   margin-left: 2px;
 }
 
+/* 필요한 값이 들어오면 표시가 * 에서 ✓ 로 바뀐다 */
+.requiredDone {
+  color: var(--success);
+}
+
 .control {
   width: 100%;
   min-height: var(--tap-min);
@@ -60,6 +65,32 @@
 
 .invalid:focus {
   box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+/*
+ * 반드시 적어야 하는 칸의 상태.
+ * 검증에 걸린 칸(.invalid + 메시지)보다 약하게, 은은한 빛으로만 알린다.
+ * 깜빡이지 않는다 — 입력 중에 시선을 뺏는다.
+ */
+.needsInput {
+  border-color: var(--danger);
+  box-shadow: 0 0 6px -1px var(--danger);
+}
+
+.satisfied {
+  border-color: var(--success);
+  box-shadow: 0 0 6px -1px var(--success);
+}
+
+/* 포커스가 들어와도 상태 색을 지킨다. 채우는 순간 빨강에서 초록으로 바뀌는 것이 보여야 한다. */
+.needsInput:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+.satisfied:focus {
+  border-color: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
 }
 
 .textarea {
