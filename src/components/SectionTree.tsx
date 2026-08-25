@@ -16,7 +16,7 @@ interface SectionTreeProps {
   /** 이 항목만 텍스트로 복사한다. 공사 전체가 아니라 한 구역만 보낼 때 쓴다. */
   onCopy: (node: SectionNode) => void
   records: RecordHandlers
-  /** 방금 추가·복제되어 잠시 강조할 기록. 없으면 null. */
+  /** 방금 추가·복제되어 잠시 강조할 항목이나 기록. 없으면 null. */
   highlightId: Id | null
 }
 
@@ -66,7 +66,11 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
 
   return (
     <li className={styles.node}>
-      <div className={styles.card}>
+      <div
+        className={[styles.card, node.section.id === highlightId ? styles.cardHighlight : undefined]
+          .filter(Boolean)
+          .join(' ')}
+      >
         <div className={styles.row}>
           <button
             type="button"

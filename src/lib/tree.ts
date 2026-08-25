@@ -1,4 +1,4 @@
-import type { Id, ProjectBody, Section, SectionNode } from '../types'
+import type { CableRecord, EquipmentRecord, Id, ProjectBody, Section, SectionNode } from '../types'
 import { newId } from './id'
 import { log } from './logger'
 
@@ -140,6 +140,65 @@ export function removeSection(body: ProjectBody, sectionId: Id): ProjectBody {
     sections: normalizeOrders(remaining),
     cables: body.cables.filter((c) => !doomed.has(c.sectionId)),
     equipments: body.equipments.filter((e) => !doomed.has(e.sectionId)),
+  }
+}
+
+export interface DuplicateSectionOptions {
+  /** 케이블·장비까지 함께 복제할지. 끄면 항목 이름·메모만 남은 껍데기가 만들어진다. */
+  withRecords: boolean
+}
+
+/**
+ * 항목을 하위 항목까지 통째로 복제해 원본 바로 아래에 끼워 넣는다.
+ * 사본의 맨 위 항목에만 "(사본)" 을 붙인다 — 하위 이름까지 바뀌면 오히려 알아보기 어렵다.
+ *
+ * 깊은 트리에서도 스택이 넘치지 않게 재귀 대신 대기열로 훑는다.
+ */
+export function duplicateSection(
+  body: ProjectBody,
+  sectionId: Id,
+  options: DuplicateSectionOptions,
+): { body: ProjectBody; sectionId: Id | null } {
+  const target = body.sections.find((s) => s.id === sectionId)
+  if (!target) return { body, sectionId: null }
+
+  const subtreeIds = collectSubtreeIds(body.sections, sectionId)
+  const idMap = new Map<Id, Id>()
+  for (const oldId of subtreeIds) idMap.set(oldId, newId())
+
+  const copiedSections = body.sections
+    .filter((s) => subtreeIds.has(s.id))
+    .map((s): Section => {
+      const isRoot = s.id === sectionId
+      return {
+        ...s,
+        id: idMap.get(s.id) ?? newId(),
+        // 사본의 뿌리는 원본과 같은 부모 아래, 바로 다음 자리에 낀다
+        parentId: isRoot ? s.parentId : (idMap.get(s.parentId ?? '') ?? null),
+        title: isRoot ? `${s.title} (사본)` : s.title,
+        order: isRoot ? s.order + 0.5 : s.order,
+      }
+    })
+
+  const copiedCables = options.withRecords
+    ? body.cables
+        .filter((c) => subtreeIds.has(c.sectionId))
+        .map((c): CableRecord => ({ ...c, id: newId(), sectionId: idMap.get(c.sectionId) ?? c.sectionId }))
+    : []
+
+  const copiedEquipments = options.withRecords
+    ? body.equipments
+        .filter((e) => subtreeIds.has(e.sectionId))
+        .map((e): EquipmentRecord => ({ ...e, id: newId(), sectionId: idMap.get(e.sectionId) ?? e.sectionId }))
+    : []
+
+  return {
+    body: {
+      sections: normalizeOrders([...body.sections, ...copiedSections]),
+      cables: [...body.cables, ...copiedCables],
+      equipments: [...body.equipments, ...copiedEquipments],
+    },
+    sectionId: idMap.get(sectionId) ?? null,
   }
 }
 

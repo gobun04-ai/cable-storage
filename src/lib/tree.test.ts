@@ -4,6 +4,7 @@ import {
   buildTree,
   collectSubtreeIds,
   countSubtree,
+  duplicateSection,
   flattenTree,
   moveSection,
   normalizeOrders,
@@ -169,6 +170,94 @@ describe('removeSection', () => {
     const body = removeSection(sampleBody(), 'nope')
 
     expect(body.sections).toHaveLength(5)
+  })
+})
+
+describe('duplicateSection', () => {
+  const WITH = { withRecords: true }
+  const WITHOUT = { withRecords: false }
+
+  it('하위 항목과 그 안의 케이블·장비까지 복제한다', () => {
+    const { body } = duplicateSection(sampleBody(), 's1', WITH)
+
+    // s1 아래는 s1a, s1a1, s1b — 자기 자신까지 넷이 늘어난다
+    expect(body.sections).toHaveLength(9)
+    expect(body.cables).toHaveLength(4)
+    expect(body.equipments).toHaveLength(2)
+  })
+
+  it('사본에 새 식별자를 매겨 원본과 겹치지 않게 한다', () => {
+    const { body, sectionId } = duplicateSection(sampleBody(), 's1', WITH)
+    const ids = body.sections.map((s) => s.id)
+
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(sectionId).not.toBe('s1')
+    expect(ids).toContain(sectionId)
+  })
+
+  it('사본을 원본 바로 아래 형제 자리에 넣는다', () => {
+    const { body, sectionId } = duplicateSection(sampleBody(), 's1', WITH)
+    const roots = buildTree(body).map((node) => node.section.id)
+
+    expect(roots).toEqual(['s1', sectionId, 's2'])
+  })
+
+  it('사본 안의 부모-자식 관계를 그대로 옮긴다', () => {
+    const { body, sectionId } = duplicateSection(sampleBody(), 's1', WITH)
+    const copy = buildTree(body).find((node) => node.section.id === sectionId)
+
+    expect(copy?.children.map((child) => child.section.title)).toEqual(['s1a', 's1b'])
+    expect(copy?.children[0]?.children.map((child) => child.section.title)).toEqual(['s1a1'])
+  })
+
+  it('맨 위 항목 이름에만 (사본) 을 붙인다', () => {
+    const { body, sectionId } = duplicateSection(sampleBody(), 's1', WITH)
+    const copy = buildTree(body).find((node) => node.section.id === sectionId)
+
+    expect(copy?.section.title).toBe('s1 (사본)')
+    expect(copy?.children.map((child) => child.section.title)).toEqual(['s1a', 's1b'])
+  })
+
+  it('복제한 기록은 사본 항목에 붙는다', () => {
+    const { body, sectionId } = duplicateSection(sampleBody(), 's1', WITH)
+    const copy = buildTree(body).find((node) => node.section.id === sectionId)
+    const copiedDeep = copy?.children[0]?.children[0]
+
+    expect(copiedDeep?.cables).toHaveLength(1)
+    expect(copiedDeep?.cables[0]?.id).not.toBe('c1')
+  })
+
+  it('구조만 복제하면 케이블·장비는 딸려오지 않는다', () => {
+    const { body, sectionId } = duplicateSection(sampleBody(), 's1', WITHOUT)
+    const copy = buildTree(body).find((node) => node.section.id === sectionId)
+
+    expect(body.sections).toHaveLength(9)
+    expect(body.cables).toHaveLength(2)
+    expect(body.equipments).toHaveLength(1)
+    expect(copy?.children[0]?.children[0]?.cables).toHaveLength(0)
+  })
+
+  it('하위가 없는 항목도 복제한다', () => {
+    const { body, sectionId } = duplicateSection(sampleBody(), 's2', WITH)
+
+    expect(body.sections).toHaveLength(6)
+    expect(buildTree(body).map((node) => node.section.id)).toEqual(['s1', 's2', sectionId])
+  })
+
+  it('없는 항목을 복제하려 하면 본문을 그대로 두고 식별자는 비운다', () => {
+    const before = sampleBody()
+    const result = duplicateSection(before, 'nope', WITH)
+
+    expect(result.body).toBe(before)
+    expect(result.sectionId).toBeNull()
+  })
+
+  it('원본 본문을 고치지 않는다', () => {
+    const before = sampleBody()
+    duplicateSection(before, 's1', WITH)
+
+    expect(before.sections).toHaveLength(5)
+    expect(before.cables).toHaveLength(2)
   })
 })
 

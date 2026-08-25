@@ -39,6 +39,34 @@
     box-shadow var(--dur-fast) var(--ease-out);
 }
 
+/*
+ * 방금 복제한 항목. 사본이 트리 어디에 들어갔는지 찾기 어려워 잠시 테두리를 밝힌다.
+ * 기록 목록의 강조(RecordList.module.css)와 같은 길이로 맞춘다.
+ */
+.cardHighlight {
+  animation: sectionHighlight 1200ms var(--ease-out);
+}
+
+@keyframes sectionHighlight {
+  from {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  to {
+    border-color: var(--border);
+    background: var(--surface);
+  }
+}
+
+/* 모션을 줄이도록 설정한 경우에도 어느 항목인지는 알려 준다. 움직임 대신 정지된 테두리로 */
+@media (prefers-reduced-motion: reduce) {
+  .cardHighlight {
+    animation: none;
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+}
+
 .row {
   display: flex;
   align-items: center;

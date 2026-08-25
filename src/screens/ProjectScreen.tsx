@@ -9,6 +9,7 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CopyIcon,
+  DuplicateIcon,
   FolderIcon,
   MoreVerticalIcon,
   PencilIcon,
@@ -45,6 +46,8 @@ import {
   addSection,
   buildTree,
   collectSubtreeIds,
+  countSubtree,
+  duplicateSection,
   flattenTree,
   moveSection,
   removeSection,
@@ -251,6 +254,46 @@ export function ProjectScreen() {
     applyBody(project, (body) => moveSection(body, sectionId, direction), '순서를 바꾸지 못했습니다.')
   }
 
+  /** 비슷한 구간을 다시 적지 않게 항목을 통째로, 또는 껍데기만 복제한다. */
+  function handleDuplicateSection(node: SectionNode, withRecords: boolean): void {
+    if (!project) return
+
+    const result = duplicateSection(project.body, node.section.id, { withRecords })
+    if (result.sectionId === null) {
+      toast.show({ message: '이미 삭제된 항목입니다.', tone: 'error' })
+      return
+    }
+
+    applyBody(project, () => result.body, '복제하지 못했습니다.')
+
+    // 상위 항목이 접혀 있으면 사본이 보이지 않는다
+    const parentId = node.section.parentId
+    if (parentId !== null && collapsed.has(parentId)) toggle(parentId)
+    highlight(result.sectionId)
+
+    const counts = countSubtree(node)
+    const extra: string[] = []
+    if (counts.descendants > 0) extra.push(`하위 ${counts.descendants}개`)
+    if (withRecords && counts.cables > 0) extra.push(`케이블 ${counts.cables}건`)
+    if (withRecords && counts.equipments > 0) extra.push(`장비 ${counts.equipments}건`)
+
+    log.info('section_duplicated', {
+      projectId,
+      withRecords,
+      descendants: counts.descendants,
+      cables: withRecords ? counts.cables : 0,
+      equipments: withRecords ? counts.equipments : 0,
+    })
+
+    toast.show({
+      message:
+        extra.length === 0
+          ? `'${node.section.title}' 항목을 복제했습니다.`
+          : `'${node.section.title}' 항목과 ${extra.join(', ')}을 복제했습니다.`,
+      tone: 'success',
+    })
+  }
+
   /** 항목 하나만 떼어 클립보드에 담는다. 공사 전체를 보내지 않고 이 구역만 전할 때 쓴다. */
   async function handleCopySection(node: SectionNode): Promise<void> {
     if (!project) return
@@ -406,6 +449,20 @@ export function ProjectScreen() {
             description: '하위 항목과 기록까지 텍스트로 복사합니다',
             icon: <CopyIcon />,
             onClick: () => void handleCopySection(menuNode),
+          },
+          {
+            key: 'duplicate',
+            label: '복제',
+            description: '하위 항목과 기록까지 그대로 하나 더 만듭니다',
+            icon: <DuplicateIcon />,
+            onClick: () => handleDuplicateSection(menuNode, true),
+          },
+          {
+            key: 'duplicate-empty',
+            label: '구조만 복제',
+            description: '항목 이름만 그대로 두고 케이블·장비는 비웁니다',
+            icon: <DuplicateIcon />,
+            onClick: () => handleDuplicateSection(menuNode, false),
           },
           {
             key: 'edit',
