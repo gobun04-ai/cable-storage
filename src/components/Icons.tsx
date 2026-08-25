@@ -99,6 +99,15 @@ export const CopyIcon = (p: IconProps) => (
   </Svg>
 )
 
+/* 복제 — 복사 아이콘에 +를 얹어, 클립보드로 담는 '복사'와 구분한다. */
+export const DuplicateIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="12" height="12" rx="2" />
+    <path d="M19 9v10a2 2 0 0 1-2 2H9" />
+    <path d="M9 6v6M6 9h6" />
+  </Svg>
+)
+
 export const SettingsIcon = (p: IconProps) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="3" />
@@ -109,6 +118,14 @@ export const SettingsIcon = (p: IconProps) => (
 export const ShareIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M12 3v13M8 7l4-4 4 4" />
+    <path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+  </Svg>
+)
+
+/* 내려받기 — 공유 아이콘과 화살표 방향만 반대다. 기기 안으로 들어온다는 뜻이다. */
+export const DownloadIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3v13M8 12l4 4 4-4" />
     <path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
   </Svg>
 )
