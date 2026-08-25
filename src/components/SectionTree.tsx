@@ -1,7 +1,9 @@
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import { ArrowDownIcon, ArrowUpIcon, ChevronRightIcon, CopyIcon, MoreVerticalIcon } from './Icons'
 import { IconButton } from './IconButton'
 import { RecordList, type RecordHandlers } from './RecordList'
 import { countSubtree } from '../lib/tree'
+import type { DragState } from '../state/useDragReorder'
 import type { Id, SectionNode } from '../types'
 import styles from './SectionTree.module.css'
 
@@ -18,19 +20,36 @@ interface SectionTreeProps {
   records: RecordHandlers
   /** 방금 추가·복제되어 잠시 강조할 항목이나 기록. 없으면 null. */
   highlightId: Id | null
+  /** 끌어서 옮기는 중인 항목. 없으면 null. */
+  drag: DragState | null
+  onDragStart: (event: ReactPointerEvent<HTMLElement>, target: { id: Id; index: number }) => void
 }
 
 export function SectionTree(props: SectionTreeProps) {
-  const { nodes, reorderMode } = props
+  return <SectionList {...props} nested={false} />
+}
+
+/**
+ * 같은 부모를 둔 형제 목록.
+ * 끌어 옮길 자리는 형제 단위로 계산하므로, 끌고 있는 카드가 이 그룹에 속할 때만 자리 표시를 그린다.
+ */
+function SectionList({ nested, ...props }: SectionTreeProps & { nested: boolean }) {
+  const { nodes, reorderMode, drag } = props
+  const dragging = drag !== null && nodes.some((node) => node.section.id === drag.id) ? drag : null
+
+  const className = nested ? styles.children : [styles.tree, reorderMode ? styles.reordering : ''].join(' ')
 
   return (
-    <ul className={`${styles.tree} ${reorderMode ? styles.reordering : ''}`}>
+    <ul className={className}>
       {nodes.map((node, index) => (
         <SectionNodeView
           key={node.section.id}
           node={node}
+          index={index}
           isFirst={index === 0}
           isLast={index === nodes.length - 1}
+          dropLine={dropLineFor(dragging, index)}
+          lifted={dragging !== null && dragging.id === node.section.id ? dragging.offsetY : null}
           {...props}
         />
       ))}
@@ -38,10 +57,20 @@ export function SectionTree(props: SectionTreeProps) {
   )
 }
 
+/** 놓을 자리를 가리키는 선을 이 카드의 위에 그릴지 아래에 그릴지 */
+function dropLineFor(drag: DragState | null, index: number): 'before' | 'after' | null {
+  if (drag === null || drag.toIndex === drag.from || index !== drag.toIndex) return null
+  return drag.toIndex < drag.from ? 'before' : 'after'
+}
+
 interface NodeViewProps extends SectionTreeProps {
   node: SectionNode
+  index: number
   isFirst: boolean
   isLast: boolean
+  dropLine: 'before' | 'after' | null
+  /** 끌고 있는 카드라면 움직인 거리(px), 아니면 null */
+  lifted: number | null
 }
 
 /** 접었을 때 안에 무엇이 얼마나 들었는지 한 줄로 알린다. 없는 종류는 뺀다. */
@@ -53,8 +82,8 @@ function collapsedSummary(counts: ReturnType<typeof countSubtree>): string {
   return parts.join(' · ')
 }
 
-function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
-  const { collapsed, reorderMode, onToggle, onMenu, onMove, onCopy, records, highlightId } = shared
+function SectionNodeView({ node, index, isFirst, isLast, dropLine, lifted, ...shared }: NodeViewProps) {
+  const { collapsed, reorderMode, onToggle, onMenu, onMove, onCopy, records, highlightId, onDragStart } = shared
 
   const counts = countSubtree(node)
   const summary = collapsedSummary(counts)
@@ -64,13 +93,29 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
   const isCollapsed = collapsed.has(node.section.id)
   const expanded = canCollapse ? !isCollapsed : true
 
+  const nodeClass = [
+    styles.node,
+    dropLine === 'before' ? styles.dropBefore : undefined,
+    dropLine === 'after' ? styles.dropAfter : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const cardClass = [
+    styles.card,
+    node.section.id === highlightId ? styles.cardHighlight : undefined,
+    lifted !== null ? styles.lifted : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <li className={styles.node}>
-      <div
-        className={[styles.card, node.section.id === highlightId ? styles.cardHighlight : undefined]
-          .filter(Boolean)
-          .join(' ')}
-      >
+    <li
+      className={nodeClass}
+      // 끌기는 형제 목록(<ul>) 안에서 계산하므로 <li> 에서 시작해야 한다
+      onPointerDown={(event) => onDragStart(event, { id: node.section.id, index })}
+    >
+      <div className={cardClass} style={lifted === null ? undefined : { transform: `translateY(${lifted}px)` }}>
         <div className={styles.row}>
           <button
             type="button"
@@ -100,7 +145,8 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
             {!expanded && summary !== '' && <span className={styles.summary}>{summary}</span>}
           </button>
 
-          <div className={styles.controls}>
+          {/* 버튼을 누르는 것은 끌기가 아니다 */}
+          <div className={styles.controls} onPointerDown={(event) => event.stopPropagation()}>
             {reorderMode ? (
               <>
                 <IconButton
@@ -145,19 +191,7 @@ function SectionNodeView({ node, isFirst, isLast, ...shared }: NodeViewProps) {
         )}
       </div>
 
-      {hasChildren && expanded && (
-        <ul className={styles.children}>
-          {node.children.map((child, index) => (
-            <SectionNodeView
-              key={child.section.id}
-              node={child}
-              isFirst={index === 0}
-              isLast={index === node.children.length - 1}
-              {...shared}
-            />
-          ))}
-        </ul>
-      )}
+      {hasChildren && expanded && <SectionList {...shared} nodes={node.children} nested />}
     </li>
   )
 }

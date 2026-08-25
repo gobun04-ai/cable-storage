@@ -227,6 +227,40 @@ export function moveSection(body: ProjectBody, sectionId: Id, direction: -1 | 1)
   }
 }
 
+/**
+ * 형제 안에서 지정한 자리로 옮긴다. 끌어서 순서를 바꿀 때 쓴다.
+ * 한 칸씩 옮기는 moveSection 과 달리 목표 위치를 곧바로 받는다.
+ *
+ * toIndex 는 옮긴 뒤의 자리다. 범위를 벗어나면 양 끝으로 붙인다.
+ */
+export function reorderSection(body: ProjectBody, sectionId: Id, toIndex: number): ProjectBody {
+  const target = body.sections.find((s) => s.id === sectionId)
+  if (!target) return body
+
+  const siblings = siblingsOf(body.sections, target.parentId)
+  const from = siblings.findIndex((s) => s.id === sectionId)
+  if (from === -1) return body
+
+  const to = Math.max(0, Math.min(siblings.length - 1, toIndex))
+  if (to === from) return body
+
+  const reordered = [...siblings]
+  const [moved] = reordered.splice(from, 1)
+  if (moved === undefined) return body
+  reordered.splice(to, 0, moved)
+
+  const orderById = new Map<Id, number>()
+  reordered.forEach((s, index) => orderById.set(s.id, index))
+
+  return {
+    ...body,
+    sections: body.sections.map((s) => {
+      const order = orderById.get(s.id)
+      return order === undefined ? s : { ...s, order }
+    }),
+  }
+}
+
 /** 형제 그룹마다 order 를 0,1,2… 로 다시 매긴다. 삭제 후 빈 번호를 없애기 위함. */
 export function normalizeOrders(sections: Section[]): Section[] {
   const counters = new Map<Id | null, number>()

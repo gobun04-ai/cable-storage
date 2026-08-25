@@ -9,6 +9,7 @@ import {
   moveSection,
   normalizeOrders,
   removeSection,
+  reorderSection,
   updateSection,
 } from './tree'
 import type { CableRecord, EquipmentRecord, ProjectBody, Section } from '../types'
@@ -293,6 +294,69 @@ describe('moveSection', () => {
     const body = moveSection(sampleBody(), 's2', -1)
 
     expect(buildTree(body).map((n) => n.section.id)).toEqual(['s2', 's1'])
+  })
+})
+
+describe('reorderSection', () => {
+  /** s1 아래 형제 순서를 읽는다 */
+  function childrenOfS1(body: ProjectBody): (string | undefined)[] {
+    return buildTree(body)[0]?.children.map((node) => node.section.id) ?? []
+  }
+
+  it('형제 안에서 지정한 자리로 옮긴다', () => {
+    const body: ProjectBody = {
+      ...sampleBody(),
+      sections: [
+        section('s1', null, 0),
+        section('a', 's1', 0),
+        section('b', 's1', 1),
+        section('c', 's1', 2),
+      ],
+    }
+
+    expect(childrenOfS1(reorderSection(body, 'c', 0))).toEqual(['c', 'a', 'b'])
+    expect(childrenOfS1(reorderSection(body, 'a', 2))).toEqual(['b', 'c', 'a'])
+    expect(childrenOfS1(reorderSection(body, 'a', 1))).toEqual(['b', 'a', 'c'])
+  })
+
+  it('옮긴 뒤 형제 순서를 0부터 빈틈없이 다시 매긴다', () => {
+    const body = reorderSection(sampleBody(), 's1b', 0)
+    const orders = body.sections.filter((s) => s.parentId === 's1').map((s) => s.order)
+
+    expect([...orders].sort()).toEqual([0, 1])
+  })
+
+  it('범위를 벗어난 자리는 양 끝으로 붙인다', () => {
+    const body = sampleBody()
+
+    expect(childrenOfS1(reorderSection(body, 's1a', 99))).toEqual(['s1b', 's1a'])
+    expect(childrenOfS1(reorderSection(body, 's1b', -5))).toEqual(['s1b', 's1a'])
+  })
+
+  it('제자리로 옮기면 본문을 그대로 돌려준다', () => {
+    const before = sampleBody()
+
+    expect(reorderSection(before, 's1a', 0)).toBe(before)
+  })
+
+  it('다른 부모의 항목은 건드리지 않는다', () => {
+    const body = reorderSection(sampleBody(), 's1b', 0)
+    const roots = buildTree(body).map((node) => node.section.id)
+
+    expect(roots).toEqual(['s1', 's2'])
+  })
+
+  it('없는 항목을 옮기려 하면 본문을 그대로 돌려준다', () => {
+    const before = sampleBody()
+
+    expect(reorderSection(before, 'nope', 1)).toBe(before)
+  })
+
+  it('원본 본문을 고치지 않는다', () => {
+    const before = sampleBody()
+    reorderSection(before, 's1b', 0)
+
+    expect(before.sections.find((s) => s.id === 's1b')?.order).toBe(1)
   })
 })
 

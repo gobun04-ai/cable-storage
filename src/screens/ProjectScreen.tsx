@@ -51,9 +51,11 @@ import {
   flattenTree,
   moveSection,
   removeSection,
+  reorderSection,
   updateSection,
 } from '../lib/tree'
 import { useCollapsedSections } from '../state/useCollapsedSections'
+import { useDragReorder } from '../state/useDragReorder'
 import { useToast } from '../state/ToastProvider'
 import type { CableRecord, EquipmentKind, EquipmentRecord, Id, Project, ProjectBody, SectionNode } from '../types'
 import styles from './ProjectScreen.module.css'
@@ -253,6 +255,20 @@ export function ProjectScreen() {
     if (!project) return
     applyBody(project, (body) => moveSection(body, sectionId, direction), '순서를 바꾸지 못했습니다.')
   }
+
+  /** 끌어 놓은 자리로 항목을 옮긴다. 형제 안에서만 움직이므로 구조는 그대로다. */
+  const handleReorderSection = useCallback(
+    (sectionId: Id, toIndex: number): void => {
+      if (!project) return
+      applyBody(project, (body) => reorderSection(body, sectionId, toIndex), '순서를 바꾸지 못했습니다.')
+    },
+    [project, applyBody],
+  )
+
+  const { drag, handlePointerDown } = useDragReorder({
+    enabled: reorderMode,
+    onReorder: handleReorderSection,
+  })
 
   /** 비슷한 구간을 다시 적지 않게 항목을 통째로, 또는 껍데기만 복제한다. */
   function handleDuplicateSection(node: SectionNode, withRecords: boolean): void {
@@ -680,7 +696,7 @@ export function ProjectScreen() {
 
             {reorderMode && (
               <div className={styles.modeBanner}>
-                <span>화살표로 같은 단계 안에서 순서를 바꿉니다.</span>
+                <span>꾹 눌러 끌거나 화살표로 같은 단계 안에서 순서를 바꿉니다.</span>
                 <Button size="sm" onClick={() => setReorderMode(false)}>
                   끝내기
                 </Button>
@@ -724,6 +740,8 @@ export function ProjectScreen() {
                   nodes={tree}
                   collapsed={collapsed}
                   reorderMode={reorderMode}
+                  drag={drag}
+                  onDragStart={handlePointerDown}
                   onToggle={toggle}
                   onMenu={setMenuNode}
                   onMove={handleMoveSection}

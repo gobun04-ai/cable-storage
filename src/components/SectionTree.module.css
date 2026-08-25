@@ -199,4 +199,30 @@
 .reordering .card {
   border-color: var(--accent);
   background: var(--accent-soft);
+  /*
+   * 꾹 눌러 끄는 동안 글자가 선택되거나 아이폰의 길게 누르기 메뉴가 뜨면 안 된다.
+   * 이 모드에서는 카드 안의 글자를 읽기만 하므로 선택을 막아도 잃는 것이 없다.
+   */
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* 끌고 있는 카드 — 바탕에서 들어 올린 것처럼 보이게 한다 */
+.lifted {
+  position: relative;
+  z-index: 2;
+  box-shadow: var(--shadow-3);
+  /* 손가락을 그대로 따라와야 하므로 위치 전환을 두지 않는다 */
+  transition: none;
+}
+
+/* 손을 떼면 들어갈 자리 */
+.dropBefore::before,
+.dropAfter::after {
+  content: '';
+  display: block;
+  height: 3px;
+  margin: var(--sp-1) 0;
+  border-radius: var(--r-full);
+  background: var(--accent);
 }
