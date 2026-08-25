@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { Button } from '../components/Button'
-import { AlertIcon, CableIcon, CopyIcon, EquipmentIcon, FolderIcon, ShareIcon } from '../components/Icons'
+import { AlertIcon, CableIcon, CopyIcon, DownloadIcon, EquipmentIcon, FolderIcon } from '../components/Icons'
 import { EmptyState, ErrorState, ListSkeleton } from '../components/States'
 import { loadProject, StorageError } from '../lib/db'
 import { downloadBlob } from '../lib/download'
@@ -10,7 +10,7 @@ import { buildShareText } from '../lib/exportText'
 import { buildProjectXlsxFile } from '../lib/exportXlsx'
 import { formatNumber } from '../lib/format'
 import { log } from '../lib/logger'
-import { canShareType, copyText, shareFile, shareText } from '../lib/share'
+import { copyText, shareText } from '../lib/share'
 import { summarize } from '../lib/summary'
 import { useToast } from '../state/ToastProvider'
 import type { Project } from '../types'
@@ -26,26 +26,6 @@ function messageOf(error: unknown, fallback: string): string {
   return error instanceof StorageError ? error.userMessage : fallback
 }
 
-const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-
-/**
- * 임시 진단 문구 — 엑셀 공유가 왜 막히는지 좁히는 동안만 둔다. 원인이 밝혀지면 사용자용 문구로 되돌린다.
- *
- * 휴대폰에는 개발자 콘솔이 없어 화면에 적는 것 말고는 원인을 알 방법이 없다.
- * 형식이 문제인지 가리려고 세 가지를 함께 물어본다.
- * exe 는 어느 브라우저나 막는 형식이라, 이것까지 '가능'으로 나오면 형식 검사 자체를 안 하는 브라우저다.
- */
-function diagnosis(reason: string | null, prebuilt: boolean): string {
-  const mark = (ok: boolean): string => (ok ? 'O' : 'X')
-  const types = [
-    `xlsx:${mark(canShareType(XLSX_MIME, 'xlsx'))}`,
-    `csv:${mark(canShareType('text/csv', 'csv'))}`,
-    `exe:${mark(canShareType('application/octet-stream', 'exe'))}`,
-  ].join(' ')
-
-  return `[진단] ${reason ?? '원인 미상'} · 파일 ${prebuilt ? '준비됨' : '즉석생성'} · ${types}`
-}
-
 export function SummaryScreen() {
   const { projectId = '' } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
@@ -54,9 +34,6 @@ export function SummaryScreen() {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [sharing, setSharing] = useState(false)
   const [exporting, setExporting] = useState(false)
-
-  // 미리 만들어 둔 엑셀. 버튼을 누르는 순간 기다림 없이 공유해야 브라우저가 막지 않는다.
-  const [xlsx, setXlsx] = useState<File | null>(null)
 
   const reload = useCallback(async () => {
     setState({ status: 'loading' })
@@ -80,31 +57,6 @@ export function SummaryScreen() {
   const hasRecords =
     summary !== null && (summary.totalCableCount > 0 || summary.replacements.length > 0 || summary.additions.length > 0)
 
-  /*
-   * 버튼을 누른 뒤에 엑셀을 만들면, 만드는 사이 '방금 눌렀음' 상태가 풀려 브라우저가 공유를 막는다.
-   * 화면이 떠 있는 동안 미리 만들어 두고 누르는 즉시 넘긴다.
-   */
-  useEffect(() => {
-    if (!project || !hasRecords) return
-
-    let discarded = false
-    setXlsx(null)
-
-    void (async () => {
-      try {
-        const file = await buildProjectXlsxFile(project)
-        if (!discarded) setXlsx(file)
-      } catch (error) {
-        // 미리 만들기가 실패해도 화면은 그대로 쓴다. 버튼을 누를 때 다시 만든다.
-        log.warn('xlsx_prebuild_failed', { projectId }, error)
-      }
-    })()
-
-    return () => {
-      discarded = true
-    }
-  }, [project, hasRecords, projectId])
-
   async function handleShare(): Promise<void> {
     if (!project || sharing) return
     setSharing(true)
@@ -127,23 +79,18 @@ export function SummaryScreen() {
     )
   }
 
+  /*
+   * 엑셀은 기기에 내려받기만 한다.
+   * 안드로이드 크롬이 xlsx 파일을 공유 시트로 넘기지 못하게 막는다(NotAllowedError: Permission denied).
+   * 다른 앱으로 보내려면 내려받은 뒤 파일 관리자에서 공유해야 한다.
+   */
   async function handleExcel(): Promise<void> {
     if (!project || exporting) return
     setExporting(true)
     try {
-      // 미리 만들어 둔 파일을 그대로 쓴다. 아직 없으면 그 자리에서 만든다.
-      const file = xlsx ?? (await buildProjectXlsxFile(project))
-      const result = await shareFile(file)
-
-      if (result.outcome === 'unsupported' || result.outcome === 'failed') {
-        // 공유가 막힌 기기에서는 내려받기 말고 방법이 없다
-        downloadBlob(file, file.name)
-        toast.show({
-          message: `앱으로 공유하지 못해 파일로 내려받았습니다. ${diagnosis(result.reason, xlsx !== null)}`,
-          tone: 'info',
-          durationMs: 15000,
-        })
-      }
+      const file = await buildProjectXlsxFile(project)
+      downloadBlob(file, file.name)
+      toast.show({ message: '엑셀 파일을 내려받았습니다.', tone: 'success' })
     } catch (error) {
       log.error('xlsx_export_failed', { projectId }, error)
       toast.show({ message: '엑셀 파일을 만들지 못했습니다. 다시 시도해 주세요.', tone: 'error' })
@@ -304,8 +251,8 @@ export function SummaryScreen() {
                 <Button icon={<CopyIcon size={18} />} onClick={() => void handleCopy()}>
                   복사
                 </Button>
-                <Button loading={exporting} icon={<ShareIcon size={18} />} onClick={() => void handleExcel()}>
-                  엑셀 공유
+                <Button loading={exporting} icon={<DownloadIcon size={18} />} onClick={() => void handleExcel()}>
+                  엑셀 내려받기
                 </Button>
               </div>
             </section>

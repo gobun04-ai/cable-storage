@@ -5,18 +5,13 @@ import { log } from './logger'
  *
  * 안드로이드 크롬은 공유 시트를 띄울 수 있지만(Web Share API) HTTPS 에서만 동작한다.
  * 그래서 공유가 안 되는 환경에서는 조용히 복사로 넘어간다.
+ *
+ * 파일(엑셀) 공유는 다루지 않는다 — 안드로이드 크롬이 xlsx 를 공유 시트로 넘기지 못하게 막는다
+ * (canShare 는 통과시키고 share 에서 NotAllowedError: Permission denied 를 던진다).
+ * 엑셀은 내려받기만 하고, 다른 앱으로 보내는 것은 파일 관리자에 맡긴다.
  */
 
 export type ShareOutcome = 'shared' | 'copied' | 'cancelled' | 'failed'
-
-/** 파일 공유는 텍스트와 달리 저장으로 물러날지 말지를 부르는 쪽이 정해야 해서 결과를 더 잘게 나눈다. */
-export type FileShareOutcome = 'shared' | 'cancelled' | 'unsupported' | 'failed'
-
-export interface FileShareResult {
-  outcome: FileShareOutcome
-  /** 공유하지 못한 이유. 성공하거나 사용자가 닫았으면 null */
-  reason: string | null
-}
 
 function canUseWebShare(): boolean {
   return typeof navigator !== 'undefined' && typeof navigator.share === 'function'
@@ -70,72 +65,4 @@ export async function shareText(options: { title: string; text: string }): Promi
   }
 
   return (await copyText(options.text)) ? 'copied' : 'failed'
-}
-
-/** 진단 문구가 화면을 덮지 않도록 자른다. */
-const REASON_MAX = 140
-
-/** 휴대폰에는 개발자 콘솔이 없다. 공유가 막힌 이유를 화면에 보여 주려고 이름과 메시지를 꺼낸다. */
-function reasonOf(error: unknown): string {
-  if (!(error instanceof Error)) return String(error).slice(0, REASON_MAX)
-
-  const detail = error.message.trim()
-  return (detail === '' ? error.name : `${error.name}: ${detail}`).slice(0, REASON_MAX)
-}
-
-/**
- * 이 브라우저가 해당 형식의 파일을 공유 대상으로 받아 주는지 알아본다.
- * 공유가 거부됐을 때 형식 때문인지 가리는 용도라 실제 내용은 필요 없다.
- */
-export function canShareType(mime: string, extension: string): boolean {
-  if (typeof navigator === 'undefined' || typeof navigator.canShare !== 'function') return false
-
-  try {
-    return navigator.canShare({ files: [new File([], `probe.${extension}`, { type: mime })] })
-  } catch (error) {
-    log.warn('share_type_probe_failed', { mime }, error)
-    return false
-  }
-}
-
-/**
- * 파일을 다른 앱으로 보낸다. 기기에 저장하지는 않는다.
- * 반드시 버튼 클릭 같은 사용자 동작 안에서, 기다림 없이 곧바로 불러야 한다.
- */
-export async function shareFile(file: File): Promise<FileShareResult> {
-  /*
-   * 확인과 실행에 똑같은 데이터를 넘긴다.
-   * canShare 로 허락받은 것과 다른 데이터를 share 에 넘기면 브라우저가 거부할 수 있다.
-   */
-  const data: ShareData = { files: [file] }
-
-  if (
-    typeof navigator === 'undefined' ||
-    typeof navigator.share !== 'function' ||
-    typeof navigator.canShare !== 'function'
-  ) {
-    return { outcome: 'unsupported', reason: '공유 기능 없음' }
-  }
-
-  try {
-    // HTTPS 가 아니거나 이 형식을 받지 않으면 여기서 걸린다
-    if (!navigator.canShare(data)) return { outcome: 'unsupported', reason: '파일 공유 미지원' }
-  } catch (error) {
-    log.warn('file_share_unsupported', { bytes: file.size }, error)
-    return { outcome: 'unsupported', reason: reasonOf(error) }
-  }
-
-  try {
-    await navigator.share(data)
-    log.info('file_shared', { bytes: file.size })
-    return { outcome: 'shared', reason: null }
-  } catch (error) {
-    // 사용자가 공유 시트를 닫은 것은 실패가 아니다
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      return { outcome: 'cancelled', reason: null }
-    }
-
-    log.warn('file_share_failed', { bytes: file.size }, error)
-    return { outcome: 'failed', reason: reasonOf(error) }
-  }
 }
